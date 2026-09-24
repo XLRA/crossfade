@@ -1,0 +1,29 @@
+# Local development database.
+#
+#   docker compose up -d        start MySQL on 127.0.0.1:3306
+#   docker compose down         stop it (data is kept in the named volume)
+#
+# Production uses deploy/docker-compose.prod.yml instead.
+services:
+  db:
+    image: mysql:8.4
+    container_name: crossfade-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: crossfade
+      MYSQL_DATABASE: crossfade
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - crossfade-mysql:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pcrossfade"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  crossfade-mysql:
