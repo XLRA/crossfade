@@ -1,6 +1,241 @@
 @import "tailwindcss";
 
+/*
+ * Crossfade design tokens.
+ *
+ * The UI is dark only, like most listening apps: artwork and video carry the color, the chrome
+ * stays out of the way. The accent is a warm amber. Spotify green and YouTube red are reserved
+ * for source labels so the platform of a track is always readable at a glance, and the accent
+ * never gets confused with either one.
+ */
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink-950: #08080a;
+  --color-ink-900: #0f0f12;
+  --color-ink-850: #141418;
+  --color-ink-800: #1a1a1f;
+  --color-ink-750: #212127;
+  --color-ink-700: #2a2a31;
+  --color-ink-600: #383840;
+  --color-ink-500: #52525c;
+
+  --color-fg: #f3f0ea;
+  --color-fg-muted: #a8a49c;
+  --color-fg-subtle: #75716a;
+
+  --color-accent: #ffc53d;
+  --color-accent-hover: #ffd470;
+  --color-accent-ink: #1b1300;
+
+  --color-spotify: #1ed760;
+  --color-youtube: #ff0033;
+  --color-danger: #ff6159;
+  --color-success: #3ecf7d;
+
+  --radius-panel: 12px;
+
+  --shadow-pop: 0 18px 50px -12px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.06);
+  --shadow-art: 0 10px 40px -8px rgb(0 0 0 / 0.65);
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+  --animate-fade-up: fade-up 420ms var(--ease-out-quart) both;
+  --animate-fade-in: fade-in 240ms ease-out both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-pop-in: pop-in 160ms var(--ease-out-quart) both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97) translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-ink-950);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: default;
+  }
+
+  img {
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+}
+
+/* Wide cut of Archivo for page titles and the wordmark. */
+@utility font-display {
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility eyebrow {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+@utility scroll-area {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 200ms;
+
+  &:hover {
+    scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+  }
+
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+  &:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(255 255 255 / 0.18);
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-ink-800) 0%,
+    var(--color-ink-750) 50%,
+    var(--color-ink-800) 100%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Equalizer bars shown next to the track that is playing. */
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.eq > span {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--color-accent);
+  animation: eq-bounce 900ms ease-in-out infinite;
+}
+.eq > span:nth-child(2) {
+  animation-delay: -300ms;
+  animation-duration: 760ms;
+}
+.eq > span:nth-child(3) {
+  animation-delay: -600ms;
+  animation-duration: 1040ms;
+}
+.eq[data-paused="true"] > span {
+  animation-play-state: paused;
+}
+
+@keyframes eq-bounce {
+  0%,
+  100% {
+    height: 25%;
+  }
+  50% {
+    height: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }
