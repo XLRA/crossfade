@@ -1,75 +1,143 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Crossfade data model. MySQL 8 in every environment (docker compose locally, the LXC
+// containers in dev/prod). Run `npm run db:generate` after editing to create a migration.
 
 generator client {
-    provider = "prisma-client-js"
-    output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-    provider = "mysql"
-    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-    // Further reading:
-    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
-    url      = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
-// Necessary for Next auth
-model Account {
-    id                       String  @id @default(cuid())
-    userId                   String
-    type                     String
-    provider                 String
-    providerAccountId        String
-    refresh_token            String? @db.Text
-    access_token             String? // @db.Text
-    expires_at               Int?
-    token_type               String?
-    scope                    String?
-    id_token                 String? // @db.Text
-    session_state            String?
-    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    refresh_token_expires_in Int?
-
-    @@unique([provider, providerAccountId])
-}
-
-model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+/// Where a track streams from. Adding a platform means adding a value here and an adapter in
+/// src/server/adapters.
+enum Source {
+  SPOTIFY
+  YOUTUBE
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?   @db.Text
+  /// Public handle used for invites and profile URLs. Generated on sign up, editable later.
+  username      String?   @unique @db.VarChar(32)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts    Account[]
+  sessions    Session[]
+  playlists   Playlist[]      @relation("PlaylistOwner")
+  tracksAdded PlaylistTrack[]
+}
+
+// ---------------------------------------------------------------------------------------------
+// NextAuth (Auth.js Prisma adapter). Tokens are TEXT because Google id_tokens and scopes get long.
+// ---------------------------------------------------------------------------------------------
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String? @db.Text
+  id_token                 String? @db.Text
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
-    @@unique([identifier, token])
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------------------------
+
+/// One row per platform track or video, shared by every playlist that contains it. Metadata is
+/// normalized by the platform adapters so the UI never has to care where a track came from.
+model Track {
+  id         String   @id @default(cuid())
+  source     Source
+  /// Spotify track id or YouTube video id.
+  sourceId   String   @db.VarChar(64)
+  title      String   @db.VarChar(512)
+  /// Display string, e.g. "Daft Punk, Pharrell Williams". For YouTube, the cleaned channel name.
+  artist     String   @db.VarChar(512)
+  album      String?  @db.VarChar(512)
+  albumId    String?  @db.VarChar(64)
+  artworkUrl String?  @db.VarChar(1024)
+  durationMs Int      @default(0)
+  explicit   Boolean  @default(false)
+  isrc       String?  @db.VarChar(32)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  playlistEntries PlaylistTrack[]
+
+  @@unique([source, sourceId])
+}
+
+// ---------------------------------------------------------------------------------------------
+// Playlists
+// ---------------------------------------------------------------------------------------------
+
+model Playlist {
+  id          String   @id @default(cuid())
+  ownerId     String
+  title       String   @db.VarChar(100)
+  description String?  @db.VarChar(300)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner  User            @relation("PlaylistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  tracks PlaylistTrack[]
+
+  @@index([ownerId, updatedAt])
+}
+
+/// A track's slot in a playlist. `position` is 0-based and kept gap-free; reordering shifts the
+/// rows in between inside a transaction.
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  playlistId String
+  trackId    String
+  position   Int
+  addedById  String?
+  addedAt    DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id], onDelete: Restrict)
+  addedBy  User?    @relation(fields: [addedById], references: [id], onDelete: SetNull)
+
+  @@index([playlistId, position])
+  @@index([trackId])
+  @@index([addedById])
 }
