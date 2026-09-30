@@ -46,3 +46,6 @@ yarn-error.log*
 .idea
 # prisma client output
 /generated
+
+# local tooling
+.claude/
