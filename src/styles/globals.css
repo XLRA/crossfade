@@ -44,6 +44,7 @@
   --animate-fade-in: fade-in 240ms ease-out both;
   --animate-shimmer: shimmer 1.6s linear infinite;
   --animate-pop-in: pop-in 160ms var(--ease-out-quart) both;
+  --animate-drift: drift 60s linear infinite;
 
   @keyframes fade-up {
     from {
@@ -73,6 +74,12 @@
     to {
       opacity: 1;
       transform: none;
+    }
+  }
+
+  @keyframes drift {
+    to {
+      transform: translateX(-50%);
     }
   }
 
