@@ -1,15 +1,17 @@
 import { PlayerBar } from "~/components/player/player-bar";
 import { LibrarySidebar } from "~/components/shell/library-sidebar";
 import { TopBar } from "~/components/shell/top-bar";
+import { SignInButton, UserMenu } from "~/components/shell/user-menu";
+import { type Viewer } from "~/lib/types";
 
 /**
  * Desktop layout: top bar, then library | page | (now playing), then the player bar. Panels are
  * separate rounded surfaces on the near-black app background with 8px gutters.
  */
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ viewer, children }: { viewer: Viewer | null; children: React.ReactNode }) {
   return (
     <div className="flex h-dvh flex-col bg-ink-950 md:p-2 md:pt-0">
-      <TopBar />
+      <TopBar right={viewer ? <UserMenu viewer={viewer} /> : <SignInButton />} />
       <div className="flex min-h-0 flex-1 gap-2">
         <LibrarySidebar />
         <main
