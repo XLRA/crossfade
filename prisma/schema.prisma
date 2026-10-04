@@ -141,3 +141,27 @@ model PlaylistTrack {
   @@index([trackId])
   @@index([addedById])
 }
+
+// ---------------------------------------------------------------------------------------------
+// External API bookkeeping
+// ---------------------------------------------------------------------------------------------
+
+/// Cached responses from Spotify and YouTube (search results, lookups, trending). Mostly here to
+/// stay inside the YouTube Data API's 10,000 units/day.
+model ApiCache {
+  key       String   @id @db.VarChar(191)
+  value     Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+/// Units spent per provider per day (the day is in Pacific time, when YouTube's quota resets).
+model ApiQuota {
+  provider String @db.VarChar(16)
+  day      String @db.VarChar(10)
+  units    Int    @default(0)
+
+  @@id([provider, day])
+}
