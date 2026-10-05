@@ -32,6 +32,10 @@ function storageKey(key: string): string {
   return `${key.slice(0, 100)}#${digest}`;
 }
 
+/**
+ * Returns the cached value for `key`, or runs `load` and caches what it returns for `ttlSeconds`.
+ * `null` results are returned but not cached.
+ */
 export async function cached<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
   const id = storageKey(key);
   const now = Date.now();
@@ -54,6 +58,9 @@ export async function cached<T>(key: string, ttlSeconds: number, load: () => Pro
       }
 
       const value = await load();
+      // A miss (deleted video, upstream hiccup) is retried next time instead of pinned for the TTL.
+      if (value === null || value === undefined) return value;
+
       const expiresAt = now + ttlSeconds * 1000;
       remember(id, value, expiresAt);
       await db.apiCache
