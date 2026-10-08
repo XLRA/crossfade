@@ -1,15 +1,18 @@
 "use client";
 
 import { keepPreviousData } from "@tanstack/react-query";
-import { Clock3, Link2, X } from "lucide-react";
+import { Clock3, Link2, Pause, Play, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { Artwork } from "~/components/tracks/artwork";
 import { SourceBadge } from "~/components/tracks/source-badge";
+import { useTrackStatus } from "~/components/player/track-status";
 import { TrackRow, TrackRowSkeleton } from "~/components/tracks/track-row";
 import { cn } from "~/lib/cn";
+import { usePlayer } from "~/lib/player/store";
+import { type PlayContext } from "~/lib/player/types";
 import { type ProviderStatus, type SourceName, type TrackData, trackKey } from "~/lib/types";
 import { api, type RouterOutputs } from "~/trpc/react";
 
@@ -136,7 +139,12 @@ function Results({
         </h2>
         {data.link ? (
           <div className="mt-4">
-            <TopResult track={data.link} />
+            <TopResult
+              track={data.link}
+              onPlay={() =>
+                usePlayer.getState().playTracks([data.link!], 0, { type: "link", title: "Your link" })
+              }
+            />
           </div>
         ) : (
           <p className="mt-3 text-fg-muted">
@@ -152,6 +160,12 @@ function Results({
   const merged = interleave(providers.map((p) => p.tracks));
   const visible = filter === "all" ? merged : (providers.find((p) => p.source === filter)?.tracks ?? []);
   const top = visible[0];
+  const context: PlayContext = {
+    type: "search",
+    title: `Search: ${q}`,
+    href: `/search?q=${encodeURIComponent(q)}`,
+  };
+  const playFrom = (index: number) => usePlayer.getState().playTracks(visible, index, context);
 
   return (
     <div className={cn("transition-opacity duration-150", stale && "opacity-50")}>
@@ -187,14 +201,14 @@ function Results({
             {top && (
               <section>
                 <h2 className="mb-3 text-2xl font-bold">Top result</h2>
-                <TopResult track={top} />
+                <TopResult track={top} onPlay={() => playFrom(0)} />
               </section>
             )}
             <section className="min-w-0">
               <h2 className="mb-2 text-2xl font-bold">Tracks</h2>
               <div>
-                {visible.slice(1, 5).map((track) => (
-                  <TrackRow key={trackKey(track)} track={track} />
+                {visible.slice(1, 5).map((track, i) => (
+                  <TrackRow key={trackKey(track)} track={track} onPlay={() => playFrom(i + 1)} />
                 ))}
               </div>
             </section>
@@ -204,8 +218,8 @@ function Results({
             <section className="mt-8">
               <h2 className="mb-2 text-2xl font-bold">More results</h2>
               <div className="grid gap-x-6 xl:grid-cols-2">
-                {visible.slice(5).map((track) => (
-                  <TrackRow key={trackKey(track)} track={track} />
+                {visible.slice(5).map((track, i) => (
+                  <TrackRow key={trackKey(track)} track={track} onPlay={() => playFrom(i + 5)} />
                 ))}
               </div>
             </section>
@@ -249,15 +263,35 @@ function ProviderNotes({ providers }: { providers: { source: SourceName; status:
   );
 }
 
-function TopResult({ track }: { track: TrackData }) {
+function TopResult({ track, onPlay }: { track: TrackData; onPlay: () => void }) {
+  const status = useTrackStatus(track);
+  const togglePlay = usePlayer((s) => s.togglePlay);
   return (
-    <div className="group relative rounded-lg bg-ink-850 p-5 transition-colors hover:bg-ink-800">
+    <div
+      onDoubleClick={onPlay}
+      className="group relative rounded-lg bg-ink-850 p-5 transition-colors hover:bg-ink-800"
+    >
       <Artwork src={track.artworkUrl} className="size-[92px] rounded-md shadow-[var(--shadow-art)]" eager />
-      <p className="mt-5 line-clamp-2 text-[28px] leading-tight font-bold tracking-tight">{track.title}</p>
+      <p className={cn("mt-5 line-clamp-2 pr-14 text-[28px] leading-tight font-bold tracking-tight", status && "text-accent")}>
+        {track.title}
+      </p>
       <p className="mt-2 flex items-center gap-2 text-sm text-fg-muted">
         <SourceBadge source={track.source} className="rounded-full bg-black/30 px-2 py-0.5 text-xs font-medium text-fg" />
         <span className="truncate">{track.artist}</span>
       </p>
+      <button
+        type="button"
+        onClick={status ? togglePlay : onPlay}
+        aria-label={status === "playing" ? `Pause ${track.title}` : `Play ${track.title}`}
+        className={cn(
+          "absolute right-5 bottom-5 grid size-12 place-items-center rounded-full bg-accent text-accent-ink shadow-[0_8px_24px_rgb(0_0_0/0.45)] transition-all duration-200 hover:scale-105 hover:bg-accent-hover",
+          status === "playing"
+            ? "translate-y-0 opacity-100"
+            : "translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus-visible:translate-y-0 focus-visible:opacity-100",
+        )}
+      >
+        {status === "playing" ? <Pause className="size-5 fill-current" /> : <Play className="ml-0.5 size-5 fill-current" />}
+      </button>
     </div>
   );
 }

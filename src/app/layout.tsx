@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import { type Metadata, type Viewport } from "next";
 import { Archivo } from "next/font/google";
 
+import { TooltipProvider } from "~/components/ui/tooltip";
 import { TRPCReactProvider } from "~/trpc/react";
 
 const archivo = Archivo({
@@ -33,7 +34,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={archivo.variable}>
       <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <TooltipProvider delayDuration={500} skipDelayDuration={200}>
+            {children}
+          </TooltipProvider>
+        </TRPCReactProvider>
       </body>
     </html>
   );

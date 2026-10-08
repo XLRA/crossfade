@@ -36,3 +36,13 @@ export function Logo({ className, compact = false }: { className?: string; compa
     </span>
   );
 }
+
+/** The logo's crossing curves as a plain line icon, for the crossfade control. */
+export function CrossfadeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M3 6.5c7 0 11 11 18 11" />
+      <path d="M3 17.5c7 0 11-11 18-11" opacity=".55" />
+    </svg>
+  );
+}

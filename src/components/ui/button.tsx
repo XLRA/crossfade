@@ -1,6 +1,7 @@
 import { Slot } from "radix-ui";
 import { forwardRef } from "react";
 
+import { Tooltip } from "~/components/ui/tooltip";
 import { cn } from "~/lib/cn";
 
 type Variant = "accent" | "light" | "ghost" | "outline" | "danger";
@@ -50,16 +51,19 @@ export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
   label: string;
   size?: "sm" | "md" | "lg";
   active?: boolean;
+  /** Show the label as a tooltip on hover. On by default; off where the label is visible anyway. */
+  tooltip?: boolean;
+  tooltipSide?: "top" | "bottom" | "left" | "right";
 }
 
 const iconSizes = { sm: "size-8", md: "size-9", lg: "size-11" };
 
-/** Round, label-required icon button. The label doubles as the accessible name. */
+/** Round, label-required icon button. The label is the accessible name and the tooltip. */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { label, size = "md", active, className, type, ...props },
+  { label, size = "md", active, tooltip = true, tooltipSide, className, type, ...props },
   ref,
 ) {
-  return (
+  const button = (
     <button
       ref={ref}
       type={type ?? "button"}
@@ -72,5 +76,12 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       )}
       {...props}
     />
+  );
+  return tooltip ? (
+    <Tooltip label={label} side={tooltipSide}>
+      {button}
+    </Tooltip>
+  ) : (
+    button
   );
 });
