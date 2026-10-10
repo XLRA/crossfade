@@ -3,8 +3,8 @@ import { PrismaClient } from "../../generated/prisma";
 
 const createPrismaClient = () =>
   new PrismaClient({
-    log:
-      env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    // Query logging buries everything else in the dev server output; set DEBUG=prisma:query to see it.
+    log: env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 
 const globalForPrisma = globalThis as unknown as {

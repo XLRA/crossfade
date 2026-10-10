@@ -28,9 +28,19 @@ export type TrackData = {
   isrc: string | null;
 };
 
+/** Just enough to identify a track on its platform. What the client sends the server. */
+export type TrackRef = Pick<TrackData, "source" | "sourceId">;
+
 /** Stable key for a track across the app, e.g. "YOUTUBE:dQw4w9WgXcQ". */
-export function trackKey(track: Pick<TrackData, "source" | "sourceId">): string {
+export function trackKey(track: TrackRef): string {
   return `${track.source}:${track.sourceId}`;
 }
 
 export type ProviderStatus = "ok" | "disabled" | "quota" | "unavailable";
+
+/** Spotify-style cover: one image, or a 2x2 mosaic once there are four different ones. */
+export function coverImages(artworks: (string | null | undefined)[]): string[] {
+  const distinct = [...new Set(artworks.filter((url): url is string => Boolean(url)))];
+  if (distinct.length >= 4) return distinct.slice(0, 4);
+  return distinct.slice(0, 1);
+}
