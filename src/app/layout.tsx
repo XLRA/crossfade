@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import { type Metadata, type Viewport } from "next";
 import { Archivo } from "next/font/google";
 
+import { Toaster } from "~/components/ui/toaster";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -38,6 +39,7 @@ export default function RootLayout({
           <TooltipProvider delayDuration={500} skipDelayDuration={200}>
             {children}
           </TooltipProvider>
+          <Toaster />
         </TRPCReactProvider>
       </body>
     </html>
