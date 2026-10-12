@@ -9,10 +9,10 @@ import { SourceBadge, SOURCE_LABEL } from "~/components/tracks/source-badge";
 import { TrackRow } from "~/components/tracks/track-row";
 import { IconButton } from "~/components/ui/button";
 import { formatDuration, plural } from "~/lib/format";
+import { sourceUrl } from "~/lib/links";
 import { peekNext, remainingInContext } from "~/lib/player/queue";
 import { usePlayer } from "~/lib/player/store";
 import { type QueueItem } from "~/lib/player/types";
-import { type TrackData } from "~/lib/types";
 
 export const PANEL_SLOT_PRIORITY = 2;
 
@@ -41,12 +41,6 @@ function PanelHeader({ title, onClose }: { title: React.ReactNode; onClose: () =
       </IconButton>
     </header>
   );
-}
-
-export function sourceUrl(track: Pick<TrackData, "source" | "sourceId">): string {
-  return track.source === "YOUTUBE"
-    ? `https://www.youtube.com/watch?v=${track.sourceId}`
-    : `https://open.spotify.com/track/${track.sourceId}`;
 }
 
 function NowPlayingPanel() {

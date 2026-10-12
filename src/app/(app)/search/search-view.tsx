@@ -14,9 +14,8 @@ import { cn } from "~/lib/cn";
 import { usePlayer } from "~/lib/player/store";
 import { type PlayContext } from "~/lib/player/types";
 import { type ProviderStatus, type SourceName, type TrackData, trackKey } from "~/lib/types";
-import { api, type RouterOutputs } from "~/trpc/react";
-
-type SearchResult = RouterOutputs["search"]["tracks"];
+import { interleave, type SearchResult } from "~/lib/search-results";
+import { api } from "~/trpc/react";
 
 type Filter = "all" | SourceName;
 
@@ -37,19 +36,6 @@ function writeRecents(list: string[]) {
   } catch {
     // storage full or blocked; recents are a nicety
   }
-}
-
-/** Takes turns between platforms so neither one buries the other in the combined list. */
-export function interleave(lists: TrackData[][]): TrackData[] {
-  const out: TrackData[] = [];
-  const longest = Math.max(0, ...lists.map((l) => l.length));
-  for (let i = 0; i < longest; i++) {
-    for (const list of lists) {
-      const item = list[i];
-      if (item) out.push(item);
-    }
-  }
-  return out;
 }
 
 export function SearchView() {
@@ -208,7 +194,7 @@ function Results({
               <h2 className="mb-2 text-2xl font-bold">Tracks</h2>
               <div>
                 {visible.slice(1, 5).map((track, i) => (
-                  <TrackRow key={trackKey(track)} track={track} onPlay={() => playFrom(i + 1)} />
+                  <TrackRow key={trackKey(track)} track={track} onPlay={() => playFrom(i + 1)} menu={{}} />
                 ))}
               </div>
             </section>
@@ -219,7 +205,7 @@ function Results({
               <h2 className="mb-2 text-2xl font-bold">More results</h2>
               <div className="grid gap-x-6 xl:grid-cols-2">
                 {visible.slice(5).map((track, i) => (
-                  <TrackRow key={trackKey(track)} track={track} onPlay={() => playFrom(i + 5)} />
+                  <TrackRow key={trackKey(track)} track={track} onPlay={() => playFrom(i + 5)} menu={{}} />
                 ))}
               </div>
             </section>

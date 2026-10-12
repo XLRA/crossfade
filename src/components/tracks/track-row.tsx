@@ -5,6 +5,7 @@ import { Pause, Play } from "lucide-react";
 import { Equalizer, useTrackStatus } from "~/components/player/track-status";
 import { Artwork } from "~/components/tracks/artwork";
 import { ExplicitBadge, SourceIcon, SOURCE_LABEL } from "~/components/tracks/source-badge";
+import { TrackContextMenu, TrackMenuButton, type TrackMenuOptions } from "~/components/tracks/track-menu";
 import { cn } from "~/lib/cn";
 import { formatDuration } from "~/lib/format";
 import { usePlayer } from "~/lib/player/store";
@@ -18,19 +19,22 @@ export function TrackRow({
   track,
   onPlay,
   actions,
+  menu,
   className,
 }: {
   track: TrackData;
   /** Starts this track. If it's already the current track, the button pauses/resumes instead. */
   onPlay?: () => void;
   actions?: React.ReactNode;
+  /** Adds the track menu: a "…" button and the same menu on right click. */
+  menu?: TrackMenuOptions;
   className?: string;
 }) {
   const status = useTrackStatus(track);
   const togglePlay = usePlayer((s) => s.togglePlay);
   const press = status ? togglePlay : onPlay;
 
-  return (
+  const row = (
     <div
       onDoubleClick={onPlay}
       className={cn(
@@ -76,8 +80,23 @@ export function TrackRow({
       <div className="flex items-center gap-1">
         {actions}
         <span className="tabular w-12 text-right text-sm text-fg-muted">{formatDuration(track.durationMs)}</span>
+        {menu && (
+          <TrackMenuButton
+            track={track}
+            options={menu}
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+          />
+        )}
       </div>
     </div>
+  );
+
+  return menu ? (
+    <TrackContextMenu track={track} options={menu}>
+      {row}
+    </TrackContextMenu>
+  ) : (
+    row
   );
 }
 

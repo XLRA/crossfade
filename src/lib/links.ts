@@ -1,4 +1,4 @@
-import { type SourceName } from "~/lib/types";
+import { type SourceName, type TrackRef } from "~/lib/types";
 
 export type ParsedLink = { source: SourceName; kind: "track" | "playlist" | "album"; id: string };
 
@@ -55,4 +55,11 @@ export function looksLikeLink(input: string): boolean {
   return /^(https?:\/\/|spotify:|(www\.|m\.|music\.)?(youtube\.com|youtu\.be|open\.spotify\.com))/i.test(
     input.trim(),
   );
+}
+
+/** The track's own page on its platform. */
+export function sourceUrl(track: TrackRef): string {
+  return track.source === "YOUTUBE"
+    ? `https://www.youtube.com/watch?v=${track.sourceId}`
+    : `https://open.spotify.com/track/${track.sourceId}`;
 }
