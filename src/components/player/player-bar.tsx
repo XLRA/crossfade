@@ -16,7 +16,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { CrossfadeIcon } from "~/components/brand/logo";
 import { Artwork } from "~/components/tracks/artwork";
@@ -156,7 +156,11 @@ function Progress() {
   const duration = usePlayer((s) => s.durationMs);
   const hasTrack = usePlayer((s) => Boolean(s.current));
   const seek = usePlayer((s) => s.seek);
+  // While the thumb is dragged the bar shows the drag position, and the seek happens on release.
+  // Keyboard steps seek right away. (Radix commits keyboard steps before it reports the change,
+  // so the two can't share one code path.)
   const [dragging, setDragging] = useState<number | null>(null);
+  const pointer = useRef(false);
 
   const shown = dragging ?? position;
   return (
@@ -169,7 +173,17 @@ function Progress() {
         step={1000}
         disabled={!hasTrack || duration <= 0}
         valueText={`${formatDuration(shown)} of ${formatDuration(duration)}`}
-        onChange={setDragging}
+        onPointerDown={() => {
+          pointer.current = true;
+        }}
+        onPointerUp={() => {
+          // After Radix's own pointerup handler has committed.
+          setTimeout(() => {
+            pointer.current = false;
+            setDragging(null);
+          }, 0);
+        }}
+        onChange={(ms) => (pointer.current ? setDragging(ms) : seek(ms))}
         onCommit={(ms) => {
           seek(ms);
           setDragging(null);

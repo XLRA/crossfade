@@ -17,6 +17,8 @@ export function Slider({
   disabled,
   onChange,
   onCommit,
+  onPointerDown,
+  onPointerUp,
   className,
 }: {
   value: number;
@@ -27,6 +29,8 @@ export function Slider({
   disabled?: boolean;
   onChange?: (value: number) => void;
   onCommit?: (value: number) => void;
+  onPointerDown?: () => void;
+  onPointerUp?: () => void;
   className?: string;
 }) {
   return (
@@ -37,6 +41,8 @@ export function Slider({
       disabled={disabled}
       onValueChange={([next]) => next !== undefined && onChange?.(next)}
       onValueCommit={([next]) => next !== undefined && onCommit?.(next)}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
       className={cn(
         "group relative flex h-4 w-full cursor-pointer touch-none items-center select-none data-[disabled]:cursor-default",
         className,
