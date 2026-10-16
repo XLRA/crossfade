@@ -57,7 +57,7 @@ export function SearchView() {
   );
 
   useEffect(() => {
-    if (!q || !search.data || search.data.query !== q || search.data.isLink) return;
+    if (!q || search.data?.query !== q || search.data.isLink) return;
     const next = [q, ...readRecents().filter((r) => r.toLowerCase() !== q.toLowerCase())];
     writeRecents(next);
     setRecents(next.slice(0, 10));

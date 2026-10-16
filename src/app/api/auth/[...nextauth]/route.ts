@@ -29,7 +29,7 @@ function publicRequest(req: NextRequest): Request {
     body: hasBody ? req.body : undefined,
     // Required by undici when forwarding a streamed body.
     ...(hasBody ? { duplex: "half" } : {}),
-  } as RequestInit);
+  });
 }
 
 export const GET = (req: NextRequest) => Auth(publicRequest(req), authConfig);

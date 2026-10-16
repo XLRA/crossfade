@@ -64,7 +64,7 @@ export function useCreatePlaylist() {
 
   return {
     pending: create.isPending,
-    async createPlaylist({ tracks, open = true }: { tracks?: TrackRef[]; open?: boolean } = {}) {
+    createPlaylist: async ({ tracks, open = true }: { tracks?: TrackRef[]; open?: boolean } = {}) => {
       try {
         const playlist = await create.mutateAsync();
         if (tracks?.length) await addToPlaylist(playlist, tracks);

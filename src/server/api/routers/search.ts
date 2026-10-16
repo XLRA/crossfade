@@ -9,7 +9,7 @@ import { clientIp, rateLimit } from "~/server/rate-limit";
 
 async function resolveLink(q: string): Promise<TrackData | null> {
   const link = parseMusicLink(q);
-  if (!link || link.kind !== "track") return null;
+  if (link?.kind !== "track") return null;
   if (link.source === "YOUTUBE") {
     if (youtube.configured) {
       const [track] = await youtube.getTracks([link.id]).catch(() => []);

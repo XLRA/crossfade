@@ -2,7 +2,6 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
-import { type Prisma } from "../../generated/prisma";
 import { db } from "~/server/db";
 
 /*
@@ -66,8 +65,8 @@ export async function cached<T>(key: string, ttlSeconds: number, load: () => Pro
       await db.apiCache
         .upsert({
           where: { key: id },
-          create: { key: id, value: value as Prisma.InputJsonValue, expiresAt: new Date(expiresAt) },
-          update: { value: value as Prisma.InputJsonValue, expiresAt: new Date(expiresAt) },
+          create: { key: id, value, expiresAt: new Date(expiresAt) },
+          update: { value, expiresAt: new Date(expiresAt) },
         })
         .catch(() => undefined);
 

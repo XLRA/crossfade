@@ -113,7 +113,8 @@ export const playlistRouter = createTRPCRouter({
       await requireRole(input.id, ctx.session.user.id, "owner");
       return ctx.db.playlist.update({
         where: { id: input.id },
-        data: { title: input.title, description: input.description ? input.description : null },
+        // An emptied description is stored as null, not "".
+        data: { title: input.title, description: input.description === "" ? null : (input.description ?? null) },
         select: { id: true, title: true, description: true },
       });
     }),
