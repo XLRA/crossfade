@@ -1,0 +1,16 @@
+.git
+.github
+.next
+.vercel
+.claude
+node_modules
+generated
+coverage
+.env
+.env.*
+!.env.example
+*.log
+Dockerfile
+docker-compose.yml
+deploy/docker-compose.prod.yml
+docs

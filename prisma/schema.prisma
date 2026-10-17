@@ -2,8 +2,10 @@
 // containers in dev/prod). Run `npm run db:generate` after editing to create a migration.
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  // native for development, debian-openssl-3.0.x for the production image (node:22-bookworm-slim).
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {

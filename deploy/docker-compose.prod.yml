@@ -1,0 +1,46 @@
+# Production on the Proxmox LXC: the app and MySQL on one host. Cloudflare Tunnel (or any
+# reverse proxy) points at 127.0.0.1:3000, and sleeep.dev rewrites /crossfade/* there.
+#
+#   cp .env.example deploy/.env.production                          # app settings, then fill it in
+#   echo "MYSQL_PASSWORD=$(openssl rand -hex 24)" > deploy/.env      # read by compose for ${...} below
+#   docker compose -f deploy/docker-compose.prod.yml up -d --build
+#
+name: crossfade
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: crossfade:latest
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      DATABASE_URL: mysql://crossfade:${MYSQL_PASSWORD:?set MYSQL_PASSWORD}@db:3306/crossfade
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: crossfade
+      MYSQL_USER: crossfade
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - mysql:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u crossfade -p$$MYSQL_PASSWORD"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  mysql:
