@@ -6,13 +6,7 @@ import { type Viewer } from "~/lib/types";
 
 const ViewerContext = createContext<Viewer | null>(null);
 
-export function ViewerProvider({
-  viewer,
-  children,
-}: {
-  viewer: Viewer | null;
-  children: React.ReactNode;
-}) {
+export function ViewerProvider({ viewer, children }: { viewer: Viewer | null; children: React.ReactNode }) {
   return <ViewerContext.Provider value={viewer}>{children}</ViewerContext.Provider>;
 }
 

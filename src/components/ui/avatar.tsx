@@ -48,10 +48,7 @@ export function Avatar({
   return (
     <span
       aria-hidden
-      className={cn(
-        "inline-grid shrink-0 place-items-center rounded-full font-semibold text-fg/90",
-        className,
-      )}
+      className={cn("text-fg/90 inline-grid shrink-0 place-items-center rounded-full font-semibold", className)}
       style={{ ...style, backgroundColor: toneFor(seed ?? name ?? "?") }}
     >
       {initialsOf(name)}

@@ -201,9 +201,11 @@ export const youtube = {
   async listPlaylists(accessToken: string): Promise<LibraryPlaylist[]> {
     const out: LibraryPlaylist[] = [];
 
-    const channels = await request<
-      Page<{ contentDetails?: { relatedPlaylists?: { likes?: string } } }>
-    >("/channels", { part: "contentDetails", mine: "true" }, { cost: 1, accessToken });
+    const channels = await request<Page<{ contentDetails?: { relatedPlaylists?: { likes?: string } } }>>(
+      "/channels",
+      { part: "contentDetails", mine: "true" },
+      { cost: 1, accessToken },
+    );
     const likesId = channels.items?.[0]?.contentDetails?.relatedPlaylists?.likes;
     if (likesId) {
       const likes = await request<Page<unknown>>(

@@ -34,19 +34,15 @@ function SubmitButton({ provider }: { provider: keyof typeof PROVIDERS }) {
         config.className,
       )}
     >
-      <span className="absolute left-5">{pending ? <LoaderCircle className="size-5 animate-spin" /> : config.icon}</span>
+      <span className="absolute left-5">
+        {pending ? <LoaderCircle className="size-5 animate-spin" /> : config.icon}
+      </span>
       {config.label}
     </button>
   );
 }
 
-export function ProviderButton({
-  provider,
-  callbackUrl,
-}: {
-  provider: keyof typeof PROVIDERS;
-  callbackUrl: string;
-}) {
+export function ProviderButton({ provider, callbackUrl }: { provider: keyof typeof PROVIDERS; callbackUrl: string }) {
   return (
     <form action={signInWithProvider}>
       <input type="hidden" name="provider" value={provider} />
@@ -62,7 +58,7 @@ function DevSubmit() {
     <button
       type="submit"
       disabled={pending}
-      className="h-10 shrink-0 rounded-full bg-ink-700 px-4 text-sm font-semibold text-fg transition-colors hover:bg-ink-600 disabled:opacity-60"
+      className="bg-ink-700 text-fg hover:bg-ink-600 h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition-colors disabled:opacity-60"
     >
       {pending ? <LoaderCircle className="size-4 animate-spin" /> : "Enter"}
     </button>
@@ -72,14 +68,11 @@ function DevSubmit() {
 /** Only rendered when AUTH_DEV_LOGIN=true outside production. */
 export function DevLoginForm({ callbackUrl }: { callbackUrl: string }) {
   return (
-    <form
-      action={signInAsDeveloper}
-      className="mt-8 rounded-xl border border-dashed border-white/15 p-4"
-    >
-      <p className="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-muted uppercase">
+    <form action={signInAsDeveloper} className="mt-8 rounded-xl border border-dashed border-white/15 p-4">
+      <p className="text-fg-muted flex items-center gap-2 text-xs font-semibold tracking-wide uppercase">
         <Terminal className="size-3.5" /> Developer login
       </p>
-      <p className="mt-1 text-xs text-fg-subtle">
+      <p className="text-fg-subtle mt-1 text-xs">
         Local testing only. Signs in as (or creates) a user with this username.
       </p>
       <input type="hidden" name="callbackUrl" value={callbackUrl} />
@@ -92,7 +85,7 @@ export function DevLoginForm({ callbackUrl }: { callbackUrl: string }) {
           pattern="[A-Za-z0-9_]+"
           placeholder="username"
           autoComplete="off"
-          className="h-10 min-w-0 flex-1 rounded-full bg-ink-850 px-4 text-sm outline-none placeholder:text-fg-subtle focus:ring-1 focus:ring-white/30"
+          className="bg-ink-850 placeholder:text-fg-subtle h-10 min-w-0 flex-1 rounded-full px-4 text-sm outline-none focus:ring-1 focus:ring-white/30"
         />
         <DevSubmit />
       </div>

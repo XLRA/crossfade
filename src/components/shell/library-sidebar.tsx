@@ -22,11 +22,11 @@ export function LibrarySidebar() {
   return (
     <aside
       aria-label="Your library"
-      className="hidden w-[284px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-panel)] bg-ink-900 md:flex lg:w-[304px]"
+      className="bg-ink-900 hidden w-[284px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-panel)] md:flex lg:w-[304px]"
     >
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h2 className="flex items-center gap-2.5 text-[15px] font-semibold text-fg">
-          <LibraryBig className="size-5 text-fg-muted" aria-hidden />
+        <h2 className="text-fg flex items-center gap-2.5 text-[15px] font-semibold">
+          <LibraryBig className="text-fg-muted size-5" aria-hidden />
           Your library
         </h2>
         {viewer && (
@@ -44,9 +44,9 @@ function GuestLibrary() {
   const signInHref = useSignInHref();
   return (
     <div className="scroll-area flex-1 px-2 pb-2">
-      <div className="m-2 rounded-lg bg-ink-850 p-4">
+      <div className="bg-ink-850 m-2 rounded-lg p-4">
         <p className="text-[15px] font-semibold">Make a playlist that mixes both</p>
-        <p className="mt-1 text-sm text-fg-muted">
+        <p className="text-fg-muted mt-1 text-sm">
           Spotify tracks and YouTube videos can sit in the same list. Sign in to start one.
         </p>
         <Button asChild size="sm" className="mt-4">
@@ -90,9 +90,9 @@ function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: 
   if ((library.data ?? []).length === 0) {
     return (
       <div className="scroll-area flex-1 px-2 pb-2">
-        <div className="m-2 rounded-lg bg-ink-850 p-4">
+        <div className="bg-ink-850 m-2 rounded-lg p-4">
           <p className="text-[15px] font-semibold">Create your first playlist</p>
-          <p className="mt-1 text-sm text-fg-muted">
+          <p className="text-fg-muted mt-1 text-sm">
             Mix Spotify tracks and YouTube videos. Crossfade plays them straight through.
           </p>
           <Button size="sm" className="mt-4" onClick={onCreate} disabled={creating}>
@@ -107,8 +107,8 @@ function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: 
     <>
       <div className="flex h-9 items-center gap-1 px-3">
         {filtering ? (
-          <div className="flex h-8 flex-1 items-center gap-2 rounded-md bg-ink-800 px-2 animate-fade-in">
-            <Search className="size-4 shrink-0 text-fg-muted" aria-hidden />
+          <div className="bg-ink-800 animate-fade-in flex h-8 flex-1 items-center gap-2 rounded-md px-2">
+            <Search className="text-fg-muted size-4 shrink-0" aria-hidden />
             <input
               autoFocus
               value={filter}
@@ -121,7 +121,7 @@ function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: 
               }}
               placeholder="Search in your library"
               aria-label="Search in your library"
-              className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-subtle"
+              className="text-fg placeholder:text-fg-subtle min-w-0 flex-1 bg-transparent text-[13px] outline-none"
             />
             <button
               type="button"
@@ -162,18 +162,18 @@ function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: 
                     <p className={cn("truncate text-[15px] leading-5", isPlaying ? "text-accent" : "text-fg")}>
                       {playlist.title}
                     </p>
-                    <p className="truncate text-[13px] leading-5 text-fg-muted">
+                    <p className="text-fg-muted truncate text-[13px] leading-5">
                       Playlist · {plural(playlist.trackCount, "track")}
                     </p>
                   </div>
-                  {isPlaying && playing && <Volume2 className="size-4 shrink-0 text-accent" aria-label="Playing" />}
+                  {isPlaying && playing && <Volume2 className="text-accent size-4 shrink-0" aria-label="Playing" />}
                 </Link>
               </li>
             );
           })}
         </ul>
         {playlists.length === 0 && (
-          <p className="px-3 py-6 text-center text-sm text-fg-muted">No playlists match &ldquo;{filter}&rdquo;.</p>
+          <p className="text-fg-muted px-3 py-6 text-center text-sm">No playlists match &ldquo;{filter}&rdquo;.</p>
         )}
       </nav>
     </>

@@ -120,10 +120,10 @@ export function VideoDock() {
   if (!surface || covered || !track) return null;
 
   return (
-    <div className="fixed right-4 bottom-[92px] z-30 hidden w-[356px] overflow-hidden rounded-xl bg-ink-800 shadow-[var(--shadow-pop)] animate-fade-up md:block">
+    <div className="bg-ink-800 animate-fade-up fixed right-4 bottom-[92px] z-30 hidden w-[356px] overflow-hidden rounded-xl shadow-[var(--shadow-pop)] md:block">
       <div className="flex h-10 items-center gap-2 pr-1 pl-3">
         <SourceIcon source={track.source} className="size-3.5 shrink-0" />
-        <p className="min-w-0 flex-1 truncate text-[13px] text-fg-muted">
+        <p className="text-fg-muted min-w-0 flex-1 truncate text-[13px]">
           <span className="text-fg">{track.title}</span> · {track.artist}
         </p>
         <IconButton label="Open now playing view" size="sm" onClick={() => setPanel("nowPlaying")}>

@@ -12,14 +12,11 @@ import { type Viewer } from "~/lib/types";
  */
 export function AppShell({ viewer, children }: { viewer: Viewer | null; children: React.ReactNode }) {
   return (
-    <div className="flex h-dvh flex-col bg-ink-950 md:p-2 md:pt-0">
+    <div className="bg-ink-950 flex h-dvh flex-col md:p-2 md:pt-0">
       <TopBar right={viewer ? <UserMenu viewer={viewer} /> : <SignInButton />} />
       <div className="flex min-h-0 flex-1 gap-2">
         <LibrarySidebar />
-        <main
-          id="main"
-          className="scroll-area relative min-w-0 flex-1 bg-ink-900 md:rounded-[var(--radius-panel)]"
-        >
+        <main id="main" className="scroll-area bg-ink-900 relative min-w-0 flex-1 md:rounded-[var(--radius-panel)]">
           {children}
         </main>
         <RightPanel />

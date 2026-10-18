@@ -69,7 +69,13 @@ export function startContext(
   const start = Math.min(Math.max(startIndex, 0), items.length - 1);
   const first = items[start]!;
   const order = state.shuffle
-    ? [first, ...shuffled(items.filter((_, i) => i !== start), random)]
+    ? [
+        first,
+        ...shuffled(
+          items.filter((_, i) => i !== start),
+          random,
+        ),
+      ]
     : items;
   const index = state.shuffle ? 0 : start;
   return { ...state, context, original: items, order, index, current: order[index]!, fromUpNext: false };

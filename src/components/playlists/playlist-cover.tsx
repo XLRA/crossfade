@@ -22,7 +22,7 @@ export function PlaylistCover({
 
   if (covers.length >= 4) {
     return (
-      <div className={cn("grid shrink-0 grid-cols-2 grid-rows-2 overflow-hidden bg-ink-750", className)}>
+      <div className={cn("bg-ink-750 grid shrink-0 grid-cols-2 grid-rows-2 overflow-hidden", className)}>
         {covers.slice(0, 4).map((src) => (
           <Artwork key={src} src={src} eager={eager} className="size-full" />
         ))}
@@ -33,7 +33,7 @@ export function PlaylistCover({
   if (covers[0]) return <Artwork src={covers[0]} eager={eager} className={className} />;
 
   return (
-    <div className={cn("grid shrink-0 place-items-center bg-ink-750 text-fg-subtle", className)}>
+    <div className={cn("bg-ink-750 text-fg-subtle grid shrink-0 place-items-center", className)}>
       <Music2 className="size-[38%] max-h-20 max-w-20" aria-hidden />
     </div>
   );

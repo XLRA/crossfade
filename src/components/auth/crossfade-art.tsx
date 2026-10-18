@@ -45,12 +45,7 @@ function Bars({ seed, height, fill }: { seed: number; height: number; fill: stri
 
 export function CrossfadeArt({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox={`0 0 ${WIDTH} 600`}
-      preserveAspectRatio="xMidYMid slice"
-      className={className}
-      aria-hidden
-    >
+    <svg viewBox={`0 0 ${WIDTH} 600`} preserveAspectRatio="xMidYMid slice" className={className} aria-hidden>
       <defs>
         <linearGradient id="cf-out" x1="0" x2="1" y1="0" y2="0">
           <stop offset="0.15" stopColor="#fff" stopOpacity="0.9" />

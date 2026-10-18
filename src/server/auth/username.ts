@@ -39,10 +39,7 @@ export function handleFrom(input: string | null | undefined): string {
 }
 
 /** Finds a free username starting from the user's name, adding digits until one is free. */
-export async function generateUsername(
-  db: PrismaClient,
-  seeds: Array<string | null | undefined>,
-): Promise<string> {
+export async function generateUsername(db: PrismaClient, seeds: Array<string | null | undefined>): Promise<string> {
   const base = handleFrom(seeds.find((s) => s && handleFrom(s) !== "listener") ?? null);
   const candidates = [base];
   for (let i = 0; i < 6; i++) {

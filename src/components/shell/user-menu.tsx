@@ -17,7 +17,7 @@ export function UserMenu({ viewer }: { viewer: Viewer }) {
     <Menu>
       <MenuTrigger
         aria-label="Account"
-        className="grid size-12 place-items-center rounded-full bg-ink-850 transition-[transform,background-color] hover:scale-[1.04] hover:bg-ink-750 data-[state=open]:bg-ink-750"
+        className="bg-ink-850 hover:bg-ink-750 data-[state=open]:bg-ink-750 grid size-12 place-items-center rounded-full transition-[transform,background-color] hover:scale-[1.04]"
       >
         <Avatar src={viewer.image} name={viewer.name ?? viewer.username} seed={viewer.id} size={32} />
       </MenuTrigger>
@@ -26,7 +26,7 @@ export function UserMenu({ viewer }: { viewer: Viewer }) {
           <Avatar src={viewer.image} name={viewer.name ?? viewer.username} seed={viewer.id} size={40} />
           <div className="min-w-0">
             <p className="truncate font-semibold">{viewer.name ?? viewer.username}</p>
-            {viewer.username && <p className="truncate text-xs text-fg-muted">@{viewer.username}</p>}
+            {viewer.username && <p className="text-fg-muted truncate text-xs">@{viewer.username}</p>}
           </div>
         </div>
         <MenuSeparator />

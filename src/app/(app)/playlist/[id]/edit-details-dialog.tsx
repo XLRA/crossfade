@@ -52,7 +52,7 @@ function EditDetailsForm({
         className="space-y-4"
       >
         <label className="block">
-          <span className="mb-1.5 flex justify-between text-xs font-semibold text-fg-muted">
+          <span className="text-fg-muted mb-1.5 flex justify-between text-xs font-semibold">
             Name <span className="tabular font-normal">{title.length}/100</span>
           </span>
           <input
@@ -61,11 +61,11 @@ function EditDetailsForm({
             maxLength={100}
             required
             autoFocus
-            className="h-11 w-full rounded-md bg-ink-750 px-3 text-[15px] outline-none focus:ring-2 focus:ring-white/40"
+            className="bg-ink-750 h-11 w-full rounded-md px-3 text-[15px] outline-none focus:ring-2 focus:ring-white/40"
           />
         </label>
         <label className="block">
-          <span className="mb-1.5 flex justify-between text-xs font-semibold text-fg-muted">
+          <span className="text-fg-muted mb-1.5 flex justify-between text-xs font-semibold">
             Description <span className="tabular font-normal">{description.length}/300</span>
           </span>
           <textarea
@@ -74,7 +74,7 @@ function EditDetailsForm({
             maxLength={300}
             rows={4}
             placeholder="Add an optional description"
-            className="w-full resize-none rounded-md bg-ink-750 px-3 py-2.5 text-sm outline-none placeholder:text-fg-subtle focus:ring-2 focus:ring-white/40"
+            className="bg-ink-750 placeholder:text-fg-subtle w-full resize-none rounded-md px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-white/40"
           />
         </label>
         <div className="flex justify-end">

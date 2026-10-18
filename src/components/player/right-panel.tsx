@@ -25,7 +25,7 @@ export function RightPanel() {
   return (
     <aside
       aria-label={panel === "queue" ? "Queue" : "Now playing"}
-      className="hidden w-[320px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-panel)] bg-ink-900 animate-fade-in lg:flex xl:w-[380px]"
+      className="bg-ink-900 animate-fade-in hidden w-[320px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-panel)] lg:flex xl:w-[380px]"
     >
       {panel === "queue" ? <QueuePanel /> : <NowPlayingPanel />}
     </aside>
@@ -70,7 +70,11 @@ function NowPlayingPanel() {
       />
       {/* Kept out of the scrolling area so the video never slides under the header. */}
       {surface ? (
-        <MediaSlot id="panel" priority={PANEL_SLOT_PRIORITY} className="h-[200px] w-full shrink-0 xl:aspect-video xl:h-auto" />
+        <MediaSlot
+          id="panel"
+          priority={PANEL_SLOT_PRIORITY}
+          className="h-[200px] w-full shrink-0 xl:aspect-video xl:h-auto"
+        />
       ) : null}
       <div className="scroll-area min-h-0 flex-1 px-4 pb-6">
         {!surface && (
@@ -84,11 +88,11 @@ function NowPlayingPanel() {
         <div className="mt-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="font-display line-clamp-2 text-[24px] leading-tight">{track.title}</p>
-            <p className="mt-1 truncate text-fg-muted">{track.artist}</p>
+            <p className="text-fg-muted mt-1 truncate">{track.artist}</p>
           </div>
         </div>
 
-        <div className="mt-5 rounded-lg bg-ink-850 p-4">
+        <div className="bg-ink-850 mt-5 rounded-lg p-4">
           <p className="text-[13px] font-semibold">About this track</p>
           <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[13px]">
             <dt className="text-fg-muted">Playing from</dt>
@@ -108,7 +112,7 @@ function NowPlayingPanel() {
             href={sourceUrl(track)}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-fg-muted hover:text-fg"
+            className="text-fg-muted hover:text-fg mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium"
           >
             Open on {SOURCE_LABEL[track.source]}
             <ExternalLink className="size-3.5" />
@@ -116,13 +120,13 @@ function NowPlayingPanel() {
         </div>
 
         {next && (
-          <div className="mt-3 rounded-lg bg-ink-850 p-2 pt-3">
+          <div className="bg-ink-850 mt-3 rounded-lg p-2 pt-3">
             <div className="flex items-center justify-between px-2">
               <p className="text-[13px] font-semibold">Next up</p>
               <button
                 type="button"
                 onClick={() => setPanel("queue")}
-                className="text-[13px] font-medium text-fg-muted hover:text-fg hover:underline"
+                className="text-fg-muted hover:text-fg text-[13px] font-medium hover:underline"
               >
                 Open queue
               </button>
@@ -152,7 +156,7 @@ function QueuePanel() {
         {!current && upNext.length === 0 ? (
           <div className="px-3 py-16 text-center">
             <p className="font-semibold">Your queue is empty</p>
-            <p className="mt-1 text-sm text-fg-muted">
+            <p className="text-fg-muted mt-1 text-sm">
               Play something, or use &ldquo;Add to queue&rdquo; on any track.
             </p>
           </div>
@@ -171,14 +175,19 @@ function QueuePanel() {
               <button
                 type="button"
                 onClick={clearQueue}
-                className="text-[13px] font-medium text-fg-muted hover:text-fg hover:underline"
+                className="text-fg-muted hover:text-fg text-[13px] font-medium hover:underline"
               >
                 Clear queue
               </button>
             }
           >
             {upNext.map((item) => (
-              <QueueRow key={item.uid} item={item} onPlay={() => jumpTo(item.uid)} onRemove={() => removeFromQueue(item.uid)} />
+              <QueueRow
+                key={item.uid}
+                item={item}
+                onPlay={() => jumpTo(item.uid)}
+                onRemove={() => removeFromQueue(item.uid)}
+              />
             ))}
           </Section>
         )}
@@ -189,7 +198,7 @@ function QueuePanel() {
               <QueueRow key={item.uid} item={item} onPlay={() => jumpTo(item.uid)} />
             ))}
             {remaining.length > shown.length && (
-              <p className="px-2 pt-2 text-[13px] text-fg-subtle">
+              <p className="text-fg-subtle px-2 pt-2 text-[13px]">
                 and {plural(remaining.length - shown.length, "more track")}
               </p>
             )}
@@ -204,7 +213,7 @@ function Section({ title, action, children }: { title: string; action?: React.Re
   return (
     <section className="mt-3 first:mt-0">
       <div className="flex h-9 items-center justify-between gap-2 px-2">
-        <h3 className="truncate text-[13px] font-semibold text-fg-muted">{title}</h3>
+        <h3 className="text-fg-muted truncate text-[13px] font-semibold">{title}</h3>
         {action}
       </div>
       {children}

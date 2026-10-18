@@ -27,7 +27,8 @@ export async function requireRole(
   needed: PlaylistRole,
 ): Promise<PlaylistRole> {
   const role = await roleFor(playlistId, userId);
-  if (!role) throw new TRPCError({ code: "NOT_FOUND", message: "That playlist doesn't exist or isn't shared with you." });
+  if (!role)
+    throw new TRPCError({ code: "NOT_FOUND", message: "That playlist doesn't exist or isn't shared with you." });
   if (RANK[role] < RANK[needed]) {
     throw new TRPCError({
       code: "FORBIDDEN",

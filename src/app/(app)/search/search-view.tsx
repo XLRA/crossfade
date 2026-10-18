@@ -121,21 +121,19 @@ function Results({
     return (
       <section className={cn("max-w-3xl transition-opacity", stale && "opacity-50")}>
         <h2 className="flex items-center gap-2 text-2xl font-bold">
-          <Link2 className="size-5 text-fg-muted" /> From your link
+          <Link2 className="text-fg-muted size-5" /> From your link
         </h2>
         {data.link ? (
           <div className="mt-4">
             <TopResult
               track={data.link}
-              onPlay={() =>
-                usePlayer.getState().playTracks([data.link!], 0, { type: "link", title: "Your link" })
-              }
+              onPlay={() => usePlayer.getState().playTracks([data.link!], 0, { type: "link", title: "Your link" })}
             />
           </div>
         ) : (
-          <p className="mt-3 text-fg-muted">
-            That link doesn&apos;t point to a track or video we can play. Playlists and albums can
-            be brought in from the import page.
+          <p className="text-fg-muted mt-3">
+            That link doesn&apos;t point to a track or video we can play. Playlists and albums can be brought in from
+            the import page.
           </p>
         )}
       </section>
@@ -164,7 +162,7 @@ function Results({
             onClick={() => onFilter(f)}
             className={cn(
               "h-8 rounded-full px-3.5 text-sm font-medium transition-colors",
-              filter === f ? "bg-fg text-ink-950" : "bg-white/[0.07] text-fg hover:bg-white/[0.12]",
+              filter === f ? "bg-fg text-ink-950" : "text-fg bg-white/[0.07] hover:bg-white/[0.12]",
             )}
           >
             {f === "all" ? "All" : f === "SPOTIFY" ? "Spotify" : "YouTube"}
@@ -237,10 +235,7 @@ function ProviderNotes({ providers }: { providers: { source: SourceName; status:
   return (
     <div className="mt-4 space-y-2">
       {notes.map((note) => (
-        <p
-          key={note.source}
-          className="flex items-start gap-2.5 rounded-lg bg-ink-850 px-4 py-3 text-sm text-fg-muted"
-        >
+        <p key={note.source} className="bg-ink-850 text-fg-muted flex items-start gap-2.5 rounded-lg px-4 py-3 text-sm">
           <SourceBadge source={note.source} withLabel={false} className="mt-0.5" />
           {note.text}
         </p>
@@ -253,16 +248,21 @@ function TopResult({ track, onPlay }: { track: TrackData; onPlay: () => void }) 
   const status = useTrackStatus(track);
   const togglePlay = usePlayer((s) => s.togglePlay);
   return (
-    <div
-      onDoubleClick={onPlay}
-      className="group relative rounded-lg bg-ink-850 p-5 transition-colors hover:bg-ink-800"
-    >
+    <div onDoubleClick={onPlay} className="group bg-ink-850 hover:bg-ink-800 relative rounded-lg p-5 transition-colors">
       <Artwork src={track.artworkUrl} className="size-[92px] rounded-md shadow-[var(--shadow-art)]" eager />
-      <p className={cn("mt-5 line-clamp-2 pr-14 text-[28px] leading-tight font-bold tracking-tight", status && "text-accent")}>
+      <p
+        className={cn(
+          "mt-5 line-clamp-2 pr-14 text-[28px] leading-tight font-bold tracking-tight",
+          status && "text-accent",
+        )}
+      >
         {track.title}
       </p>
-      <p className="mt-2 flex items-center gap-2 text-sm text-fg-muted">
-        <SourceBadge source={track.source} className="rounded-full bg-black/30 px-2 py-0.5 text-xs font-medium text-fg" />
+      <p className="text-fg-muted mt-2 flex items-center gap-2 text-sm">
+        <SourceBadge
+          source={track.source}
+          className="text-fg rounded-full bg-black/30 px-2 py-0.5 text-xs font-medium"
+        />
         <span className="truncate">{track.artist}</span>
       </p>
       <button
@@ -270,13 +270,17 @@ function TopResult({ track, onPlay }: { track: TrackData; onPlay: () => void }) 
         onClick={status ? togglePlay : onPlay}
         aria-label={status === "playing" ? `Pause ${track.title}` : `Play ${track.title}`}
         className={cn(
-          "absolute right-5 bottom-5 grid size-12 place-items-center rounded-full bg-accent text-accent-ink shadow-[0_8px_24px_rgb(0_0_0/0.45)] transition-all duration-200 hover:scale-105 hover:bg-accent-hover",
+          "bg-accent text-accent-ink hover:bg-accent-hover absolute right-5 bottom-5 grid size-12 place-items-center rounded-full shadow-[0_8px_24px_rgb(0_0_0/0.45)] transition-all duration-200 hover:scale-105",
           status === "playing"
             ? "translate-y-0 opacity-100"
             : "translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 focus-visible:translate-y-0 focus-visible:opacity-100",
         )}
       >
-        {status === "playing" ? <Pause className="size-5 fill-current" /> : <Play className="ml-0.5 size-5 fill-current" />}
+        {status === "playing" ? (
+          <Pause className="size-5 fill-current" />
+        ) : (
+          <Play className="ml-0.5 size-5 fill-current" />
+        )}
       </button>
     </div>
   );
@@ -306,7 +310,7 @@ function EmptyState({ title, body }: { title: string; body: string }) {
   return (
     <div className="mx-auto max-w-md py-20 text-center">
       <p className="text-xl font-bold">{title}</p>
-      <p className="mt-2 text-fg-muted">{body}</p>
+      <p className="text-fg-muted mt-2">{body}</p>
     </div>
   );
 }
@@ -334,7 +338,7 @@ function Browse({ recents, onClearRecents }: { recents: string[]; onClearRecents
             <button
               type="button"
               onClick={onClearRecents}
-              className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg"
+              className="text-fg-muted hover:text-fg inline-flex items-center gap-1.5 text-sm"
             >
               <X className="size-4" /> Clear
             </button>
@@ -346,7 +350,7 @@ function Browse({ recents, onClearRecents }: { recents: string[]; onClearRecents
                 href={`/search?q=${encodeURIComponent(r)}`}
                 className="inline-flex h-9 items-center gap-2 rounded-full bg-white/[0.07] px-4 text-sm transition-colors hover:bg-white/[0.12]"
               >
-                <Clock3 className="size-3.5 text-fg-muted" />
+                <Clock3 className="text-fg-muted size-3.5" />
                 {r}
               </Link>
             ))}
@@ -364,21 +368,26 @@ function Browse({ recents, onClearRecents }: { recents: string[]; onClearRecents
               className="group relative aspect-[16/10] overflow-hidden rounded-lg p-4"
               style={{ backgroundColor: v.color }}
             >
-              <span className="font-display relative z-10 text-[clamp(17px,1.6vw,22px)] leading-none">
-                {v.label}
-              </span>
+              <span className="font-display relative z-10 text-[clamp(17px,1.6vw,22px)] leading-none">{v.label}</span>
               <svg
                 viewBox="0 0 100 60"
                 aria-hidden
                 className="absolute -right-3 -bottom-3 w-2/3 opacity-30 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
               >
                 <path d="M0 12c26 0 40 40 100 40" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" />
-                <path d="M0 52c26 0 40-40 100-40" fill="none" stroke="white" strokeWidth="6" strokeLinecap="round" opacity=".5" />
+                <path
+                  d="M0 52c26 0 40-40 100-40"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  opacity=".5"
+                />
               </svg>
             </Link>
           ))}
         </div>
-        <p className="mt-6 text-sm text-fg-subtle">
+        <p className="text-fg-subtle mt-6 text-sm">
           Tip: paste a YouTube or Spotify link into the search bar to jump straight to it.
         </p>
       </section>

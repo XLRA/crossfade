@@ -82,10 +82,7 @@ export function TrackTable({
     <div className="@container" role="table" aria-label="Tracks" aria-rowcount={entries.length + 1}>
       <div
         role="row"
-        className={cn(
-          GRID,
-          "sticky top-16 z-10 h-9 border-b border-white/[0.08] bg-ink-900 text-[13px] text-fg-muted",
-        )}
+        className={cn(GRID, "bg-ink-900 text-fg-muted sticky top-16 z-10 h-9 border-b border-white/[0.08] text-[13px]")}
       >
         <span role="columnheader" className="text-right">
           #
@@ -171,8 +168,8 @@ function TrackTableRow({
         style={{ transform: CSS.Translate.toString(transform), transition }}
         className={cn(
           GRID,
-          "group relative h-14 rounded-md text-fg-muted transition-colors hover:bg-white/[0.06] focus-within:bg-white/[0.06]",
-          isDragging && "z-20 bg-ink-750 shadow-[var(--shadow-pop)]",
+          "group text-fg-muted relative h-14 rounded-md transition-colors focus-within:bg-white/[0.06] hover:bg-white/[0.06]",
+          isDragging && "bg-ink-750 z-20 shadow-[var(--shadow-pop)]",
         )}
       >
         <div role="cell" className="relative flex h-full items-center justify-end">
@@ -183,7 +180,7 @@ function TrackTableRow({
             type="button"
             onClick={onPlay}
             aria-label={playing ? `Pause ${track.title}` : `Play ${track.title} by ${track.artist}`}
-            className="invisible absolute inset-y-0 right-0 grid w-6 place-items-center text-fg group-hover:visible focus-visible:visible"
+            className="text-fg invisible absolute inset-y-0 right-0 grid w-6 place-items-center group-hover:visible focus-visible:visible"
           >
             {playing ? <Pause className="size-4 fill-current" /> : <Play className="size-4 fill-current" />}
           </button>
@@ -197,7 +194,7 @@ function TrackTableRow({
               <SourceIcon source={track.source} className="size-3.5 shrink-0" />
               <span className="sr-only">{SOURCE_LABEL[track.source]}:</span>
               {track.explicit && <ExplicitBadge />}
-              <span className="truncate group-hover:text-fg">{track.artist}</span>
+              <span className="group-hover:text-fg truncate">{track.artist}</span>
             </p>
           </div>
         </div>
@@ -231,7 +228,7 @@ function TrackTableRow({
           <button
             type="button"
             aria-label={`Reorder ${track.title}`}
-            className="absolute top-1/2 -left-6 hidden -translate-y-1/2 cursor-grab touch-none text-fg-subtle opacity-0 group-hover:opacity-100 hover:text-fg focus-visible:opacity-100 active:cursor-grabbing md:block"
+            className="text-fg-subtle hover:text-fg absolute top-1/2 -left-6 hidden -translate-y-1/2 cursor-grab touch-none opacity-0 group-hover:opacity-100 focus-visible:opacity-100 active:cursor-grabbing md:block"
             {...attributes}
             {...listeners}
           >

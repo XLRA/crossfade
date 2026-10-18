@@ -1,12 +1,6 @@
 import { type SourceName, type TrackData } from "~/lib/types";
 
-export type AdapterErrorCode =
-  | "not_configured"
-  | "quota"
-  | "rate_limited"
-  | "unauthorized"
-  | "not_found"
-  | "upstream";
+export type AdapterErrorCode = "not_configured" | "quota" | "rate_limited" | "unauthorized" | "not_found" | "upstream";
 
 export class AdapterError extends Error {
   constructor(

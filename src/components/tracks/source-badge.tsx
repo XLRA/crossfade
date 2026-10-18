@@ -35,7 +35,7 @@ export function ExplicitBadge() {
     <span
       title="Explicit"
       aria-label="Explicit"
-      className="inline-grid h-4 w-4 shrink-0 place-items-center rounded-[3px] bg-fg-muted/80 text-[9.5px] leading-none font-bold text-ink-950"
+      className="bg-fg-muted/80 text-ink-950 inline-grid h-4 w-4 shrink-0 place-items-center rounded-[3px] text-[9.5px] leading-none font-bold"
     >
       E
     </span>

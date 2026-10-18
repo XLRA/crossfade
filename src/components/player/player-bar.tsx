@@ -66,25 +66,25 @@ function NowPlaying() {
       </button>
       <div className="min-w-0">
         {context?.href ? (
-          <Link href={context.href} className="block truncate text-sm font-medium text-fg hover:underline">
+          <Link href={context.href} className="text-fg block truncate text-sm font-medium hover:underline">
             {track.title}
           </Link>
         ) : (
-          <p className="truncate text-sm font-medium text-fg">{track.title}</p>
+          <p className="text-fg truncate text-sm font-medium">{track.title}</p>
         )}
         {error ? (
-          <p className="flex items-center gap-1.5 truncate text-xs text-danger" role="status">
+          <p className="text-danger flex items-center gap-1.5 truncate text-xs" role="status">
             <CircleAlert className="size-3.5 shrink-0" />
             <span className="truncate">{error}</span>
           </p>
         ) : (
-          <p className="flex min-w-0 items-center gap-1.5 text-xs text-fg-muted">
+          <p className="text-fg-muted flex min-w-0 items-center gap-1.5 text-xs">
             <SourceIcon source={track.source} className="size-3 shrink-0" />
             <span className="sr-only">{SOURCE_LABEL[track.source]}:</span>
             <span className="truncate">{track.artist}</span>
             {engine === "spotify-embed" && (
               <Tooltip label="Spotify plays 30-second previews unless you're signed in to Spotify in this browser, or connect a Premium account.">
-                <span className="ml-1 shrink-0 rounded-sm bg-white/10 px-1.5 py-px text-[10px] font-semibold tracking-wide text-fg-muted uppercase">
+                <span className="text-fg-muted ml-1 shrink-0 rounded-sm bg-white/10 px-1.5 py-px text-[10px] font-semibold tracking-wide uppercase">
                   Preview
                 </span>
               </Tooltip>
@@ -108,7 +108,12 @@ function Transport() {
   return (
     <div className="flex flex-col items-center gap-1">
       <div className="flex items-center gap-2">
-        <IconButton label={shuffle ? "Turn off shuffle" : "Shuffle"} active={shuffle} onClick={toggleShuffle} disabled={!hasTrack}>
+        <IconButton
+          label={shuffle ? "Turn off shuffle" : "Shuffle"}
+          active={shuffle}
+          onClick={toggleShuffle}
+          disabled={!hasTrack}
+        >
           <Shuffle className="size-[18px]" />
           {shuffle && <Dot />}
         </IconButton>
@@ -121,11 +126,18 @@ function Transport() {
             onClick={togglePlay}
             disabled={!hasTrack}
             aria-label={playing ? "Pause" : "Play"}
-            className="relative mx-1.5 grid size-9 place-items-center rounded-full bg-fg text-ink-950 transition-transform hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+            className="bg-fg text-ink-950 relative mx-1.5 grid size-9 place-items-center rounded-full transition-transform hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
           >
-            {playing ? <Pause className="size-[18px] fill-current" /> : <Play className="ml-0.5 size-[18px] fill-current" />}
+            {playing ? (
+              <Pause className="size-[18px] fill-current" />
+            ) : (
+              <Play className="ml-0.5 size-[18px] fill-current" />
+            )}
             {buffering && playing && (
-              <span className="absolute -inset-1 animate-spin rounded-full border-2 border-transparent border-t-accent" aria-hidden />
+              <span
+                className="border-t-accent absolute -inset-1 animate-spin rounded-full border-2 border-transparent"
+                aria-hidden
+              />
             )}
           </button>
         </Tooltip>
@@ -165,7 +177,7 @@ function Progress() {
   const shown = dragging ?? position;
   return (
     <div className="flex w-full max-w-[640px] items-center gap-2">
-      <span className="tabular w-10 text-right text-xs text-fg-muted">{hasTrack ? formatDuration(shown) : ""}</span>
+      <span className="tabular text-fg-muted w-10 text-right text-xs">{hasTrack ? formatDuration(shown) : ""}</span>
       <Slider
         label="Seek"
         value={shown}
@@ -189,7 +201,7 @@ function Progress() {
           setDragging(null);
         }}
       />
-      <span className="tabular w-10 text-xs text-fg-muted">{hasTrack ? formatDuration(duration) : ""}</span>
+      <span className="tabular text-fg-muted w-10 text-xs">{hasTrack ? formatDuration(duration) : ""}</span>
     </div>
   );
 }
@@ -245,9 +257,9 @@ function CrossfadeControl() {
           <p className="font-semibold">Crossfade</p>
           <p className="tabular text-fg-muted">{seconds > 0 ? `${seconds} s` : "Off"}</p>
         </div>
-        <p className="mt-1 text-[13px] leading-snug text-fg-muted">
-          Blend the end of each track into the start of the next. The volumes follow an
-          equal-power curve, so the mix doesn&apos;t dip in the middle.
+        <p className="text-fg-muted mt-1 text-[13px] leading-snug">
+          Blend the end of each track into the start of the next. The volumes follow an equal-power curve, so the mix
+          doesn&apos;t dip in the middle.
         </p>
         <Slider
           label="Crossfade length in seconds"
@@ -258,7 +270,7 @@ function CrossfadeControl() {
           onChange={setCrossfade}
           className="mt-4"
         />
-        <div className="mt-1.5 flex justify-between text-[11px] text-fg-subtle">
+        <div className="text-fg-subtle mt-1.5 flex justify-between text-[11px]">
           <span>Off</span>
           <span>12 s</span>
         </div>

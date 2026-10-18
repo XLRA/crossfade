@@ -22,7 +22,7 @@ export function Tooltip({
           side={side}
           sideOffset={8}
           collisionPadding={8}
-          className="z-50 rounded-md bg-ink-700 px-2.5 py-1.5 text-[13px] font-medium text-fg shadow-[var(--shadow-pop)] animate-fade-in select-none"
+          className="bg-ink-700 text-fg animate-fade-in z-50 rounded-md px-2.5 py-1.5 text-[13px] font-medium shadow-[var(--shadow-pop)] select-none"
         >
           {label}
         </RadixTooltip.Content>

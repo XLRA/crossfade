@@ -49,12 +49,12 @@ export function Slider({
       )}
     >
       <RadixSlider.Track className="relative h-1 grow overflow-hidden rounded-full bg-white/[0.18]">
-        <RadixSlider.Range className="absolute h-full rounded-full bg-fg group-hover:bg-accent group-focus-within:bg-accent group-data-[disabled]:bg-white/30" />
+        <RadixSlider.Range className="bg-fg group-hover:bg-accent group-focus-within:bg-accent absolute h-full rounded-full group-data-[disabled]:bg-white/30" />
       </RadixSlider.Track>
       <RadixSlider.Thumb
         aria-label={label}
         aria-valuetext={valueText}
-        className="block size-3 rounded-full bg-fg opacity-0 shadow-[0_2px_6px_rgb(0_0_0/0.5)] transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent group-data-[disabled]:hidden"
+        className="bg-fg focus-visible:outline-accent block size-3 rounded-full opacity-0 shadow-[0_2px_6px_rgb(0_0_0/0.5)] transition-opacity group-hover:opacity-100 group-data-[disabled]:hidden focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2"
       />
     </RadixSlider.Root>
   );

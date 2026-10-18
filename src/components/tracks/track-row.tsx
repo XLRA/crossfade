@@ -38,7 +38,7 @@ export function TrackRow({
     <div
       onDoubleClick={onPlay}
       className={cn(
-        "group grid h-14 grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-md px-2 transition-colors hover:bg-white/[0.06] focus-within:bg-white/[0.06]",
+        "group grid h-14 grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-md px-2 transition-colors focus-within:bg-white/[0.06] hover:bg-white/[0.06]",
         className,
       )}
     >
@@ -53,9 +53,7 @@ export function TrackRow({
           <button
             type="button"
             onClick={press}
-            aria-label={
-              status === "playing" ? `Pause ${track.title}` : `Play ${track.title} by ${track.artist}`
-            }
+            aria-label={status === "playing" ? `Pause ${track.title}` : `Play ${track.title} by ${track.artist}`}
             className="absolute inset-0 grid place-items-center rounded bg-black/55 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           >
             {status === "playing" ? (
@@ -69,7 +67,7 @@ export function TrackRow({
 
       <div className="min-w-0">
         <p className={cn("truncate text-[15px] leading-5", status ? "text-accent" : "text-fg")}>{track.title}</p>
-        <p className="flex min-w-0 items-center gap-1.5 text-[13px] leading-5 text-fg-muted">
+        <p className="text-fg-muted flex min-w-0 items-center gap-1.5 text-[13px] leading-5">
           <SourceIcon source={track.source} className="size-3.5 shrink-0" />
           <span className="sr-only">{SOURCE_LABEL[track.source]}:</span>
           {track.explicit && <ExplicitBadge />}
@@ -79,7 +77,7 @@ export function TrackRow({
 
       <div className="flex items-center gap-1">
         {actions}
-        <span className="tabular w-12 text-right text-sm text-fg-muted">{formatDuration(track.durationMs)}</span>
+        <span className="tabular text-fg-muted w-12 text-right text-sm">{formatDuration(track.durationMs)}</span>
         {menu && (
           <TrackMenuButton
             track={track}

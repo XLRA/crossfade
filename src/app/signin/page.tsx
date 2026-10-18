@@ -27,9 +27,7 @@ type SearchParams = Promise<{ error?: string; callbackUrl?: string }>;
 export default async function SignInPage({ searchParams }: { searchParams: SearchParams }) {
   const { error, callbackUrl: rawCallback } = await searchParams;
   const callbackUrl =
-    rawCallback && rawCallback.startsWith(BASE_PATH) && !rawCallback.includes("//")
-      ? rawCallback
-      : BASE_PATH;
+    rawCallback && rawCallback.startsWith(BASE_PATH) && !rawCallback.includes("//") ? rawCallback : BASE_PATH;
 
   const session = await auth();
   if (session?.user) redirect(callbackUrl.slice(BASE_PATH.length) || "/");
@@ -40,7 +38,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
   return (
     <div className="scroll-area h-dvh">
       <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.15fr)_minmax(420px,1fr)] lg:p-2">
-        <section className="relative hidden flex-col overflow-hidden rounded-[var(--radius-panel)] bg-ink-900 p-12 lg:flex">
+        <section className="bg-ink-900 relative hidden flex-col overflow-hidden rounded-[var(--radius-panel)] p-12 lg:flex">
           <Link href="/" aria-label="Crossfade home" className="self-start">
             <Logo />
           </Link>
@@ -48,9 +46,9 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
             <h1 className="font-display text-[clamp(44px,4.4vw,68px)] leading-[0.95]">
               Spotify and YouTube, in one queue.
             </h1>
-            <p className="mt-6 max-w-[460px] text-lg leading-relaxed text-fg-muted">
-              Put the live take from YouTube right after the studio cut on Spotify. Crossfade plays
-              the whole list and blends every handoff.
+            <p className="text-fg-muted mt-6 max-w-[460px] text-lg leading-relaxed">
+              Put the live take from YouTube right after the studio cut on Spotify. Crossfade plays the whole list and
+              blends every handoff.
             </p>
           </div>
           <div className="relative -mx-12 my-8 min-h-[160px] flex-1">
@@ -63,8 +61,8 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
               ["Share them", "Friends can edit, whatever service they use."],
             ].map(([title, body]) => (
               <div key={title}>
-                <dt className="font-semibold text-fg">{title}</dt>
-                <dd className="mt-1 text-fg-muted">{body}</dd>
+                <dt className="text-fg font-semibold">{title}</dt>
+                <dd className="text-fg-muted mt-1">{body}</dd>
               </div>
             ))}
           </dl>
@@ -77,7 +75,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
             </Link>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm text-fg-muted transition-colors hover:text-fg"
+              className="text-fg-muted hover:text-fg inline-flex items-center gap-2 text-sm transition-colors"
             >
               <ArrowLeft className="size-4" />
               Back to listening
@@ -86,14 +84,14 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
 
           <div className="mx-auto flex w-full max-w-[380px] flex-1 flex-col justify-center py-12">
             <h2 className="text-[30px] font-bold tracking-tight">Sign in to Crossfade</h2>
-            <p className="mt-2 text-[15px] leading-relaxed text-fg-muted">
+            <p className="text-fg-muted mt-2 text-[15px] leading-relaxed">
               Use whichever account your music lives in. You can connect the other one later.
             </p>
 
             {message && (
               <p
                 role="alert"
-                className="mt-6 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm leading-relaxed text-fg"
+                className="border-danger/30 bg-danger/10 text-fg mt-6 rounded-lg border px-4 py-3 text-sm leading-relaxed"
               >
                 {message}
               </p>
@@ -103,18 +101,18 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
               {enabledProviders.spotify && <ProviderButton provider="spotify" callbackUrl={callbackUrl} />}
               {enabledProviders.google && <ProviderButton provider="google" callbackUrl={callbackUrl} />}
               {nothingConfigured && (
-                <p className="rounded-lg bg-ink-850 px-4 py-3 text-sm text-fg-muted">
-                  Sign in isn&apos;t configured on this server yet. Set the Spotify or Google
-                  credentials described in .env.example.
+                <p className="bg-ink-850 text-fg-muted rounded-lg px-4 py-3 text-sm">
+                  Sign in isn&apos;t configured on this server yet. Set the Spotify or Google credentials described in
+                  .env.example.
                 </p>
               )}
             </div>
 
             {enabledProviders.dev && <DevLoginForm callbackUrl={callbackUrl} />}
 
-            <p className="mt-8 text-xs leading-relaxed text-fg-subtle">
-              Crossfade reads your name, email and profile picture. Your playlists are only read
-              if you choose to import them, and Crossfade never posts to your accounts.
+            <p className="text-fg-subtle mt-8 text-xs leading-relaxed">
+              Crossfade reads your name, email and profile picture. Your playlists are only read if you choose to import
+              them, and Crossfade never posts to your accounts.
             </p>
           </div>
         </section>

@@ -21,20 +21,18 @@ async function resolveLink(q: string): Promise<TrackData | null> {
 }
 
 export const searchRouter = createTRPCRouter({
-  tracks: publicProcedure
-    .input(z.object({ q: z.string().trim().min(1).max(200) }))
-    .query(async ({ ctx, input }) => {
-      const who = ctx.session?.user.id ?? clientIp(ctx.headers);
-      if (!rateLimit(`search:${who}`, 40, 60_000)) {
-        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Slow down a little and try again." });
-      }
+  tracks: publicProcedure.input(z.object({ q: z.string().trim().min(1).max(200) })).query(async ({ ctx, input }) => {
+    const who = ctx.session?.user.id ?? clientIp(ctx.headers);
+    if (!rateLimit(`search:${who}`, 40, 60_000)) {
+      throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Slow down a little and try again." });
+    }
 
-      if (parseMusicLink(input.q)) {
-        const link = await resolveLink(input.q);
-        return { query: input.q, isLink: true as const, link, youtube: null };
-      }
+    if (parseMusicLink(input.q)) {
+      const link = await resolveLink(input.q);
+      return { query: input.q, isLink: true as const, link, youtube: null };
+    }
 
-      const results = await settle("YOUTUBE", () => youtube.search(input.q, 12));
-      return { query: input.q, isLink: false as const, link: null, youtube: results };
-    }),
+    const results = await settle("YOUTUBE", () => youtube.search(input.q, 12));
+    return { query: input.q, isLink: false as const, link: null, youtube: results };
+  }),
 });

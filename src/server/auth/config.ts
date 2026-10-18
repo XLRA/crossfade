@@ -28,9 +28,7 @@ export const enabledProviders = {
  * Cookies are scoped to /crossfade so the rest of sleeep.dev never sees them, and renamed so they
  * can't collide with anything else on the domain. (`__Host-` names would require Path=/.)
  */
-const secureCookies = env.AUTH_URL
-  ? env.AUTH_URL.startsWith("https://")
-  : env.NODE_ENV === "production";
+const secureCookies = env.AUTH_URL ? env.AUTH_URL.startsWith("https://") : env.NODE_ENV === "production";
 const prefix = secureCookies ? "__Secure-" : "";
 const cookie = { httpOnly: true, sameSite: "lax" as const, path: BASE_PATH, secure: secureCookies };
 
@@ -73,7 +71,10 @@ if (enabledProviders.dev) {
       credentials: { username: { label: "Username", type: "text" } },
       async authorize(credentials) {
         const raw = typeof credentials?.username === "string" ? credentials.username : "";
-        const username = raw.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24);
+        const username = raw
+          .toLowerCase()
+          .replace(/[^a-z0-9_]/g, "")
+          .slice(0, 24);
         if (username.length < 3) return null;
         const user = await db.user.upsert({
           where: { username },

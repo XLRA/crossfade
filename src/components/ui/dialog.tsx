@@ -33,13 +33,13 @@ export function DialogContent({
           <RadixDialog.Title className="text-2xl font-bold">{title}</RadixDialog.Title>
           <RadixDialog.Close
             aria-label="Close"
-            className="-mt-1 -mr-2 grid size-8 place-items-center rounded-full text-fg-muted hover:bg-white/10 hover:text-fg"
+            className="text-fg-muted hover:text-fg -mt-1 -mr-2 grid size-8 place-items-center rounded-full hover:bg-white/10"
           >
             <X className="size-5" />
           </RadixDialog.Close>
         </div>
         {description ? (
-          <RadixDialog.Description className="mt-1 text-sm text-fg-muted">{description}</RadixDialog.Description>
+          <RadixDialog.Description className="text-fg-muted mt-1 text-sm">{description}</RadixDialog.Description>
         ) : (
           <RadixDialog.Description className="sr-only">{title}</RadixDialog.Description>
         )}
@@ -73,7 +73,7 @@ export function ConfirmDialog({
         <RadixAlert.Overlay className={overlay} />
         <RadixAlert.Content className={cn(panel, "max-w-[420px]")}>
           <RadixAlert.Title className="text-xl font-bold">{title}</RadixAlert.Title>
-          <RadixAlert.Description className="mt-2 text-sm text-fg-muted">{description}</RadixAlert.Description>
+          <RadixAlert.Description className="text-fg-muted mt-2 text-sm">{description}</RadixAlert.Description>
           <div className="mt-6 flex justify-end gap-2">
             <RadixAlert.Cancel asChild>
               <Button variant="ghost">Cancel</Button>

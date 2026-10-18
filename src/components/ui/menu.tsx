@@ -21,22 +21,21 @@ export const MenuTrigger = DropdownMenu.Trigger;
 export const MenuGroup = DropdownMenu.Group;
 export const MenuSub = DropdownMenu.Sub;
 
-export const MenuContent = forwardRef<
-  HTMLDivElement,
-  React.ComponentPropsWithoutRef<typeof DropdownMenu.Content>
->(function MenuContent({ className, sideOffset = 6, ...props }, ref) {
-  return (
-    <DropdownMenu.Portal>
-      <DropdownMenu.Content
-        ref={ref}
-        sideOffset={sideOffset}
-        collisionPadding={12}
-        className={cn(surface, className)}
-        {...props}
-      />
-    </DropdownMenu.Portal>
-  );
-});
+export const MenuContent = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeof DropdownMenu.Content>>(
+  function MenuContent({ className, sideOffset = 6, ...props }, ref) {
+    return (
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          ref={ref}
+          sideOffset={sideOffset}
+          collisionPadding={12}
+          className={cn(surface, className)}
+          {...props}
+        />
+      </DropdownMenu.Portal>
+    );
+  },
+);
 
 export const MenuItem = forwardRef<
   HTMLDivElement,
@@ -59,7 +58,7 @@ export const MenuCheckboxItem = forwardRef<
     <DropdownMenu.CheckboxItem ref={ref} className={cn(item, "pr-9", className)} {...props}>
       {children}
       <DropdownMenu.ItemIndicator className="absolute right-3">
-        <Check className="size-4 text-accent" />
+        <Check className="text-accent size-4" />
       </DropdownMenu.ItemIndicator>
     </DropdownMenu.CheckboxItem>
   );
@@ -71,7 +70,7 @@ export function MenuSeparator({ className }: { className?: string }) {
 
 export function MenuLabel({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <DropdownMenu.Label className={cn("px-3 pt-2 pb-1 text-xs font-medium text-fg-subtle", className)}>
+    <DropdownMenu.Label className={cn("text-fg-subtle px-3 pt-2 pb-1 text-xs font-medium", className)}>
       {children}
     </DropdownMenu.Label>
   );
@@ -82,13 +81,9 @@ export const MenuSubTrigger = forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenu.SubTrigger>
 >(function MenuSubTrigger({ className, children, ...props }, ref) {
   return (
-    <DropdownMenu.SubTrigger
-      ref={ref}
-      className={cn(item, "data-[state=open]:bg-white/[0.08]", className)}
-      {...props}
-    >
+    <DropdownMenu.SubTrigger ref={ref} className={cn(item, "data-[state=open]:bg-white/[0.08]", className)} {...props}>
       {children}
-      <ChevronRight className="ml-auto size-4 text-fg-muted" />
+      <ChevronRight className="text-fg-muted ml-auto size-4" />
     </DropdownMenu.SubTrigger>
   );
 });
@@ -122,12 +117,7 @@ export const ContextMenuContent = forwardRef<
 >(function ContextMenuContent({ className, ...props }, ref) {
   return (
     <ContextMenu.Portal>
-      <ContextMenu.Content
-        ref={ref}
-        collisionPadding={12}
-        className={cn(surface, className)}
-        {...props}
-      />
+      <ContextMenu.Content ref={ref} collisionPadding={12} className={cn(surface, className)} {...props} />
     </ContextMenu.Portal>
   );
 });
@@ -154,13 +144,9 @@ export const ContextMenuSubTrigger = forwardRef<
   React.ComponentPropsWithoutRef<typeof ContextMenu.SubTrigger>
 >(function ContextMenuSubTrigger({ className, children, ...props }, ref) {
   return (
-    <ContextMenu.SubTrigger
-      ref={ref}
-      className={cn(item, "data-[state=open]:bg-white/[0.08]", className)}
-      {...props}
-    >
+    <ContextMenu.SubTrigger ref={ref} className={cn(item, "data-[state=open]:bg-white/[0.08]", className)} {...props}>
       {children}
-      <ChevronRight className="ml-auto size-4 text-fg-muted" />
+      <ChevronRight className="text-fg-muted ml-auto size-4" />
     </ContextMenu.SubTrigger>
   );
 });

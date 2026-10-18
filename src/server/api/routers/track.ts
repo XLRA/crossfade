@@ -13,7 +13,11 @@ export const trackRouter = createTRPCRouter({
       z.object({
         source: z.enum(["SPOTIFY", "YOUTUBE"]),
         sourceId: z.string().min(1).max(64),
-        durationMs: z.number().int().min(1_000).max(12 * 60 * 60 * 1000),
+        durationMs: z
+          .number()
+          .int()
+          .min(1_000)
+          .max(12 * 60 * 60 * 1000),
       }),
     )
     .mutation(async ({ ctx, input }) => {

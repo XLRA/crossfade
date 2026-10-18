@@ -20,18 +20,14 @@ const handler = (req: NextRequest) =>
   fetchRequestHandler({
     // Next strips the /crossfade base path from req.url in route handlers, but be tolerant of
     // either form (e.g. when a proxy in front rewrites the URL).
-    endpoint: new URL(req.url).pathname.startsWith(withBase("/api/trpc"))
-      ? withBase("/api/trpc")
-      : "/api/trpc",
+    endpoint: new URL(req.url).pathname.startsWith(withBase("/api/trpc")) ? withBase("/api/trpc") : "/api/trpc",
     req,
     router: appRouter,
     createContext: () => createContext(req),
     onError:
       env.NODE_ENV === "development"
         ? ({ path, error }) => {
-            console.error(
-              `❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`
-            );
+            console.error(`❌ tRPC failed on ${path ?? "<no-path>"}: ${error.message}`);
           }
         : undefined,
   });

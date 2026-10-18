@@ -13,11 +13,7 @@ const trackRef = z.object({
   sourceId: z.string().min(1).max(64),
 });
 
-const title = z
-  .string()
-  .trim()
-  .min(1, "Give the playlist a name.")
-  .max(100, "Keep the name under 100 characters.");
+const title = z.string().trim().min(1, "Give the playlist a name.").max(100, "Keep the name under 100 characters.");
 
 const description = z.string().trim().max(300, "Keep the description under 300 characters.");
 

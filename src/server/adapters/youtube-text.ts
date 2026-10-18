@@ -9,8 +9,7 @@ export function parseIsoDuration(iso: string | null | undefined): number {
   const match = /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/.exec(iso);
   if (!match) return 0;
   const [, d, h, m, s] = match;
-  const seconds =
-    Number(d ?? 0) * 86400 + Number(h ?? 0) * 3600 + Number(m ?? 0) * 60 + Number(s ?? 0);
+  const seconds = Number(d ?? 0) * 86400 + Number(h ?? 0) * 3600 + Number(m ?? 0) * 60 + Number(s ?? 0);
   return Math.round(seconds * 1000);
 }
 
@@ -42,12 +41,18 @@ const OFFICIAL_SUFFIX = /\s*[|•-]\s*official\s+(?:music\s+)?(?:video|audio|vis
 const DASHES = /\s+[-–—]\s+/;
 
 function tidy(text: string): string {
-  return text.replace(/\s{2,}/g, " ").replace(/^[\s\-–—|•]+|[\s\-–—|•]+$/g, "").trim();
+  return text
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[\s\-–—|•]+|[\s\-–—|•]+$/g, "")
+    .trim();
 }
 
 /** "TaylorSwiftVEVO" -> "Taylor Swift", "Daft Punk - Topic" -> "Daft Punk". */
 export function cleanChannelName(channel: string): string {
-  let name = channel.replace(/\s*-\s*Topic$/i, "").replace(/VEVO$/i, "").replace(/\s+Official$/i, "");
+  let name = channel
+    .replace(/\s*-\s*Topic$/i, "")
+    .replace(/VEVO$/i, "")
+    .replace(/\s+Official$/i, "");
   if (!/\s/.test(name)) name = name.replace(/([a-z])([A-Z])/g, "$1 $2");
   return tidy(name) || channel;
 }

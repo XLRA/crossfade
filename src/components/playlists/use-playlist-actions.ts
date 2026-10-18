@@ -29,7 +29,9 @@ export function useAddToPlaylist() {
 
       if (result.added > 0) {
         toast(
-          result.added === 1 ? `Added to ${playlist.title}` : `Added ${plural(result.added, "track")} to ${playlist.title}`,
+          result.added === 1
+            ? `Added to ${playlist.title}`
+            : `Added ${plural(result.added, "track")} to ${playlist.title}`,
           result.duplicates > 0 ? { description: `${plural(result.duplicates, "track")} already there` } : undefined,
         );
       } else if (result.duplicates > 0) {

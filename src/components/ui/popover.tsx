@@ -9,22 +9,21 @@ export const Popover = RadixPopover.Root;
 export const PopoverTrigger = RadixPopover.Trigger;
 export const PopoverClose = RadixPopover.Close;
 
-export const PopoverContent = forwardRef<
-  HTMLDivElement,
-  React.ComponentPropsWithoutRef<typeof RadixPopover.Content>
->(function PopoverContent({ className, sideOffset = 10, ...props }, ref) {
-  return (
-    <RadixPopover.Portal>
-      <RadixPopover.Content
-        ref={ref}
-        sideOffset={sideOffset}
-        collisionPadding={12}
-        className={cn(
-          "z-50 w-[300px] rounded-xl bg-ink-750 p-4 text-sm text-fg shadow-[var(--shadow-pop)] animate-pop-in outline-none",
-          className,
-        )}
-        {...props}
-      />
-    </RadixPopover.Portal>
-  );
-});
+export const PopoverContent = forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<typeof RadixPopover.Content>>(
+  function PopoverContent({ className, sideOffset = 10, ...props }, ref) {
+    return (
+      <RadixPopover.Portal>
+        <RadixPopover.Content
+          ref={ref}
+          sideOffset={sideOffset}
+          collisionPadding={12}
+          className={cn(
+            "bg-ink-750 text-fg animate-pop-in z-50 w-[300px] rounded-xl p-4 text-sm shadow-[var(--shadow-pop)] outline-none",
+            className,
+          )}
+          {...props}
+        />
+      </RadixPopover.Portal>
+    );
+  },
+);

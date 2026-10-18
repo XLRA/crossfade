@@ -40,7 +40,7 @@ export function PlaylistView({ id }: { id: string }) {
     return (
       <div className="mx-auto max-w-md px-6 py-24 text-center">
         <p className="font-display text-3xl">Couldn&apos;t find that playlist</p>
-        <p className="mt-3 text-fg-muted">
+        <p className="text-fg-muted mt-3">
           {query.error?.data?.code === "NOT_FOUND"
             ? "It may have been deleted, or it isn't shared with you."
             : "Something went wrong loading it. Try again in a moment."}
@@ -77,13 +77,21 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
   const visible = useMemo(() => {
     const q = filter.trim().toLowerCase();
     if (!q) return entries;
-    return entries.filter(
-      (e) => e.track.title.toLowerCase().includes(q) || e.track.artist.toLowerCase().includes(q),
-    );
+    return entries.filter((e) => e.track.title.toLowerCase().includes(q) || e.track.artist.toLowerCase().includes(q));
   }, [entries, filter]);
 
-  const context: PlayContext = { type: "playlist", id: playlist.id, title: playlist.title, href: `/playlist/${playlist.id}` };
-  const playAt = (index: number) => usePlayer.getState().playTracks(entries.map((e) => e.track), index, context);
+  const context: PlayContext = {
+    type: "playlist",
+    id: playlist.id,
+    title: playlist.title,
+    href: `/playlist/${playlist.id}`,
+  };
+  const playAt = (index: number) =>
+    usePlayer.getState().playTracks(
+      entries.map((e) => e.track),
+      index,
+      context,
+    );
   const playEntry = (entry: PlaylistEntry) => playAt(entries.findIndex((e) => e.entryId === entry.entryId));
   const playAll = () => {
     if (isContext) return usePlayer.getState().togglePlay();
@@ -171,7 +179,12 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
         )}
         style={{ backgroundColor: stuck ? `hsl(${hue} 28% 22%)` : "transparent" }}
       >
-        <div className={cn("flex min-w-0 items-center gap-3 transition-opacity duration-200", stuck ? "opacity-100" : "opacity-0")}>
+        <div
+          className={cn(
+            "flex min-w-0 items-center gap-3 transition-opacity duration-200",
+            stuck ? "opacity-100" : "opacity-0",
+          )}
+        >
           <PlayButton playing={playing} onClick={playAll} size="sm" disabled={entries.length === 0} />
           <p className="truncate text-xl font-bold">{playlist.title}</p>
         </div>
@@ -190,12 +203,18 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
           <p className="text-sm font-medium">Playlist</p>
           {isOwner ? (
             <button type="button" onClick={() => setEditing(true)} className="mt-1 block max-w-full text-left">
-              <h1 className={cn("font-display line-clamp-2 leading-[1.02] break-words", titleSize)}>{playlist.title}</h1>
+              <h1 className={cn("font-display line-clamp-2 leading-[1.02] break-words", titleSize)}>
+                {playlist.title}
+              </h1>
             </button>
           ) : (
-            <h1 className={cn("font-display mt-1 line-clamp-2 leading-[1.02] break-words", titleSize)}>{playlist.title}</h1>
+            <h1 className={cn("font-display mt-1 line-clamp-2 leading-[1.02] break-words", titleSize)}>
+              {playlist.title}
+            </h1>
           )}
-          {playlist.description && <p className="mt-3 line-clamp-2 max-w-3xl text-sm text-white/70">{playlist.description}</p>}
+          {playlist.description && (
+            <p className="mt-3 line-clamp-2 max-w-3xl text-sm text-white/70">{playlist.description}</p>
+          )}
           <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
             <Avatar
               src={playlist.owner.image}
@@ -276,8 +295,8 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
 
           <div className="ml-auto flex items-center">
             {filterOpen ? (
-              <div className="flex h-9 w-[min(240px,40vw)] items-center gap-2 rounded-md bg-white/[0.08] px-2.5 animate-fade-in">
-                <Search className="size-4 shrink-0 text-fg-muted" aria-hidden />
+              <div className="animate-fade-in flex h-9 w-[min(240px,40vw)] items-center gap-2 rounded-md bg-white/[0.08] px-2.5">
+                <Search className="text-fg-muted size-4 shrink-0" aria-hidden />
                 <input
                   autoFocus
                   value={filter}
@@ -290,7 +309,7 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
                   }}
                   placeholder="Search in playlist"
                   aria-label="Search in playlist"
-                  className="min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-fg-subtle"
+                  className="placeholder:text-fg-subtle min-w-0 flex-1 bg-transparent text-[13px] outline-none"
                 />
                 <button
                   type="button"
@@ -330,7 +349,7 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
               onRemove={onRemove}
             />
             {visible.length === 0 && (
-              <p className="py-10 text-center text-sm text-fg-muted">No tracks match &ldquo;{filter}&rdquo;.</p>
+              <p className="text-fg-muted py-10 text-center text-sm">No tracks match &ldquo;{filter}&rdquo;.</p>
             )}
           </div>
         )}
@@ -349,7 +368,7 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
           ))}
 
         {!canEdit && entries.length === 0 && (
-          <p className="px-6 py-12 text-center text-fg-muted">This playlist is empty.</p>
+          <p className="text-fg-muted px-6 py-12 text-center">This playlist is empty.</p>
         )}
       </div>
 
@@ -394,7 +413,7 @@ function PlayButton({
       disabled={disabled}
       aria-label={playing ? "Pause" : "Play"}
       className={cn(
-        "grid shrink-0 place-items-center rounded-full bg-accent text-accent-ink shadow-[0_8px_20px_rgb(0_0_0/0.3)] transition-[transform,background-color] hover:scale-[1.04] hover:bg-accent-hover active:scale-95 disabled:opacity-50 disabled:hover:scale-100",
+        "bg-accent text-accent-ink hover:bg-accent-hover grid shrink-0 place-items-center rounded-full shadow-[0_8px_20px_rgb(0_0_0/0.3)] transition-[transform,background-color] hover:scale-[1.04] active:scale-95 disabled:opacity-50 disabled:hover:scale-100",
         size === "lg" ? "size-14" : "size-11",
       )}
     >
@@ -410,7 +429,7 @@ function PlayButton({
 function PlaylistSkeleton() {
   return (
     <div>
-      <div className="flex items-end gap-6 bg-ink-850 px-6 pt-20 pb-6">
+      <div className="bg-ink-850 flex items-end gap-6 px-6 pt-20 pb-6">
         <div className="skeleton size-[min(232px,22vw)] shrink-0 rounded-md" />
         <div className="flex-1 space-y-4">
           <div className="skeleton h-4 w-20 rounded" />

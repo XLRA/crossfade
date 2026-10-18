@@ -40,9 +40,7 @@ export function parseMusicLink(input: string): ParsedLink | null {
   }
 
   if (host === "open.spotify.com" || host === "play.spotify.com") {
-    const match = /^\/(?:intl-[a-z]{2}(?:-[a-z]{2})?\/)?(track|album|playlist)\/([A-Za-z0-9]+)/i.exec(
-      url.pathname,
-    );
+    const match = /^\/(?:intl-[a-z]{2}(?:-[a-z]{2})?\/)?(track|album|playlist)\/([A-Za-z0-9]+)/i.exec(url.pathname);
     if (match && SPOTIFY_ID.test(match[2]!)) {
       return { source: "SPOTIFY", kind: match[1]!.toLowerCase() as ParsedLink["kind"], id: match[2]! };
     }
@@ -52,9 +50,7 @@ export function parseMusicLink(input: string): ParsedLink | null {
 }
 
 export function looksLikeLink(input: string): boolean {
-  return /^(https?:\/\/|spotify:|(www\.|m\.|music\.)?(youtube\.com|youtu\.be|open\.spotify\.com))/i.test(
-    input.trim(),
-  );
+  return /^(https?:\/\/|spotify:|(www\.|m\.|music\.)?(youtube\.com|youtu\.be|open\.spotify\.com))/i.test(input.trim());
 }
 
 /** The track's own page on its platform. */

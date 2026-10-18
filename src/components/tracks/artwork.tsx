@@ -26,9 +26,9 @@ export function Artwork({
   const broken = !src || failed === src;
 
   return (
-    <div className={cn("relative shrink-0 overflow-hidden bg-ink-750", className)}>
+    <div className={cn("bg-ink-750 relative shrink-0 overflow-hidden", className)}>
       {broken ? (
-        <div className="absolute inset-0 grid place-items-center text-fg-subtle">
+        <div className="text-fg-subtle absolute inset-0 grid place-items-center">
           <Music2 className={cn("size-[40%] max-h-12 max-w-12", iconClassName)} aria-hidden />
         </div>
       ) : (

@@ -27,7 +27,7 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
           href="/"
           aria-label="Home"
           className={cn(
-            "hidden size-12 shrink-0 place-items-center rounded-full bg-ink-850 transition-colors hover:bg-ink-750 md:grid",
+            "bg-ink-850 hover:bg-ink-750 hidden size-12 shrink-0 place-items-center rounded-full transition-colors md:grid",
             pathname === "/" ? "text-fg" : "text-fg-muted hover:text-fg",
           )}
         >
@@ -47,12 +47,10 @@ function SearchBoxShell({ children }: { children?: React.ReactNode }) {
   return (
     <div className="group relative w-full max-w-[480px]">
       <Search
-        className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-fg-muted transition-colors group-focus-within:text-fg"
+        className="text-fg-muted group-focus-within:text-fg pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 transition-colors"
         aria-hidden
       />
-      {children ?? (
-        <div className="h-12 w-full rounded-full bg-ink-850" aria-hidden />
-      )}
+      {children ?? <div className="bg-ink-850 h-12 w-full rounded-full" aria-hidden />}
     </div>
   );
 }
@@ -75,8 +73,7 @@ function SearchBox() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      const typing =
-        target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
+      const typing = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA" || target?.isContentEditable;
       if ((e.key === "/" && !typing) || (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey))) {
         e.preventDefault();
         inputRef.current?.focus();
@@ -132,7 +129,7 @@ function SearchBox() {
           spellCheck={false}
           placeholder="Search Spotify and YouTube, or paste a link"
           aria-label="Search Spotify and YouTube"
-          className="h-12 w-full rounded-full border border-transparent bg-ink-850 pr-12 pl-12 text-[15px] text-fg placeholder:text-fg-subtle transition-colors outline-none hover:border-white/10 hover:bg-ink-800 focus:border-white/25 focus:bg-ink-800 [&::-webkit-search-cancel-button]:hidden"
+          className="bg-ink-850 text-fg placeholder:text-fg-subtle hover:bg-ink-800 focus:bg-ink-800 h-12 w-full rounded-full border border-transparent pr-12 pl-12 text-[15px] transition-colors outline-none hover:border-white/10 focus:border-white/25 [&::-webkit-search-cancel-button]:hidden"
         />
       </form>
       {value ? (
@@ -144,12 +141,12 @@ function SearchBox() {
             inputRef.current?.focus();
             if (pathname === "/search") go("", "replace");
           }}
-          className="absolute top-1/2 right-3 grid size-8 -translate-y-1/2 place-items-center rounded-full text-fg-muted hover:text-fg"
+          className="text-fg-muted hover:text-fg absolute top-1/2 right-3 grid size-8 -translate-y-1/2 place-items-center rounded-full"
         >
           <X className="size-[18px]" />
         </button>
       ) : (
-        <kbd className="pointer-events-none absolute top-1/2 right-4 hidden -translate-y-1/2 rounded border border-white/10 px-1.5 py-0.5 text-[11px] font-medium text-fg-subtle lg:block">
+        <kbd className="text-fg-subtle pointer-events-none absolute top-1/2 right-4 hidden -translate-y-1/2 rounded border border-white/10 px-1.5 py-0.5 text-[11px] font-medium lg:block">
           /
         </kbd>
       )}

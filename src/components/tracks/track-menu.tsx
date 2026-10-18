@@ -142,7 +142,7 @@ function AddToPlaylistSub({ kind, track, exclude }: { kind: Kind; track: TrackDa
           New playlist
         </Item>
         {playlists.length > 0 && <Separator />}
-        {library.isLoading && <p className="px-3 py-2 text-[13px] text-fg-subtle">Loading your playlists…</p>}
+        {library.isLoading && <p className="text-fg-subtle px-3 py-2 text-[13px]">Loading your playlists…</p>}
         {playlists.map((playlist) => (
           <Item key={playlist.id} onSelect={() => void addToPlaylist(playlist, [track])}>
             <span className="truncate">{playlist.title}</span>
