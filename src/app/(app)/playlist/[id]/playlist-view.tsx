@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis, Link2, ListEnd, Pause, Pencil, Play, Search, Shuffle, Trash2, X } from "lucide-react";
+import { Ellipsis, Link2, ListEnd, Pencil, Search, Shuffle, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -11,6 +11,7 @@ import { Avatar } from "~/components/ui/avatar";
 import { Button, IconButton } from "~/components/ui/button";
 import { ConfirmDialog } from "~/components/ui/dialog";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/ui/menu";
+import { PlayButton } from "~/components/ui/play-button";
 import { absoluteUrl } from "~/lib/base-path";
 import { cn } from "~/lib/cn";
 import { formatLongDuration, plural } from "~/lib/format";
@@ -177,7 +178,9 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
           "sticky top-0 z-20 -mb-16 flex h-16 items-center gap-3 px-6 transition-[background-color,box-shadow] duration-200",
           stuck ? "shadow-[0_6px_16px_rgb(0_0_0/0.35)]" : "pointer-events-none",
         )}
-        style={{ backgroundColor: stuck ? `hsl(${hue} 28% 22%)` : "transparent" }}
+        style={{
+          backgroundColor: stuck ? `hsl(${hue} 28% 22%)` : "transparent",
+        }}
       >
         <div
           className={cn(
@@ -192,7 +195,9 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
 
       <header
         className="flex flex-col gap-6 px-6 pt-20 pb-6 @xl:flex-row @xl:items-end"
-        style={{ background: `linear-gradient(180deg, hsl(${hue} 34% 36%) 0%, hsl(${hue} 30% 22%) 100%)` }}
+        style={{
+          background: `linear-gradient(180deg, hsl(${hue} 34% 36%) 0%, hsl(${hue} 30% 22%) 100%)`,
+        }}
       >
         <PlaylistCover
           covers={playlist.covers}
@@ -237,7 +242,11 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
         </div>
       </header>
 
-      <div style={{ background: `linear-gradient(180deg, hsl(${hue} 26% 16%) 0, var(--color-ink-900) 240px)` }}>
+      <div
+        style={{
+          background: `linear-gradient(180deg, hsl(${hue} 26% 16%) 0, var(--color-ink-900) 240px)`,
+        }}
+      >
         <div ref={sentinel} />
         <div className="flex items-center gap-3 px-6 py-5">
           <PlayButton playing={playing} onClick={playAll} disabled={entries.length === 0} />
@@ -392,37 +401,6 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
         </>
       )}
     </div>
-  );
-}
-
-function PlayButton({
-  playing,
-  onClick,
-  size = "lg",
-  disabled,
-}: {
-  playing: boolean;
-  onClick: () => void;
-  size?: "sm" | "lg";
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={playing ? "Pause" : "Play"}
-      className={cn(
-        "bg-accent text-accent-ink hover:bg-accent-hover grid shrink-0 place-items-center rounded-full shadow-[0_8px_20px_rgb(0_0_0/0.3)] transition-[transform,background-color] hover:scale-[1.04] active:scale-95 disabled:opacity-50 disabled:hover:scale-100",
-        size === "lg" ? "size-14" : "size-11",
-      )}
-    >
-      {playing ? (
-        <Pause className={cn("fill-current", size === "lg" ? "size-6" : "size-5")} />
-      ) : (
-        <Play className={cn("ml-0.5 fill-current", size === "lg" ? "size-6" : "size-5")} />
-      )}
-    </button>
   );
 }
 
