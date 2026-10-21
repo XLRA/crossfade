@@ -16,9 +16,17 @@ export function interleave(lists: TrackData[][]): TrackData[] {
   return out;
 }
 
-/** Every playable track in a search response, platforms interleaved. */
-export function resultTracks(data: SearchResult | undefined): TrackData[] {
+/**
+ * Every playable track in a search response, platforms interleaved. Spotify leads for people who
+ * can play its full tracks; everyone else would get 30-second previews, so YouTube leads for them.
+ */
+export function resultTracks(data: SearchResult | undefined, { spotifyFirst = false } = {}): TrackData[] {
   if (!data) return [];
-  if (data.isLink) return data.link ? [data.link] : [];
-  return interleave([data.youtube.tracks]);
+  if (data.isLink) {
+    if (data.link.kind === "track") return [data.link.track];
+    if (data.link.kind === "collection") return data.link.tracks;
+    return [];
+  }
+  const { spotify, youtube } = data;
+  return interleave(spotifyFirst ? [spotify.tracks, youtube.tracks] : [youtube.tracks, spotify.tracks]);
 }

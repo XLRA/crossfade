@@ -14,6 +14,11 @@ export const env = createEnv({
     AUTH_URL: z.string().url().optional(),
     AUTH_SPOTIFY_ID: optional,
     AUTH_SPOTIFY_SECRET: optional,
+    /** Country used for Spotify search and lookups, so results are playable there. */
+    SPOTIFY_MARKET: z
+      .string()
+      .regex(/^[A-Z]{2}$/, "Use a two-letter country code")
+      .default("US"),
     AUTH_GOOGLE_ID: optional,
     AUTH_GOOGLE_SECRET: optional,
     /** Local-only username login so the app can be exercised without OAuth apps. */
@@ -36,6 +41,7 @@ export const env = createEnv({
     AUTH_URL: process.env.AUTH_URL,
     AUTH_SPOTIFY_ID: process.env.AUTH_SPOTIFY_ID,
     AUTH_SPOTIFY_SECRET: process.env.AUTH_SPOTIFY_SECRET,
+    SPOTIFY_MARKET: process.env.SPOTIFY_MARKET,
     AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     AUTH_DEV_LOGIN: process.env.AUTH_DEV_LOGIN,

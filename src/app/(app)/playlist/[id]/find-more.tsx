@@ -5,6 +5,7 @@ import { Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useAddToPlaylist } from "~/components/playlists/use-playlist-actions";
+import { useViewer } from "~/components/providers/viewer-provider";
 import { TrackRow, TrackRowSkeleton } from "~/components/tracks/track-row";
 import { Button, IconButton } from "~/components/ui/button";
 import { resultTracks } from "~/lib/search-results";
@@ -34,9 +35,15 @@ export function FindMore({
 
   const search = api.search.tracks.useQuery(
     { q },
-    { enabled: q.length > 1, placeholderData: keepPreviousData, staleTime: 5 * 60_000, retry: false },
+    {
+      enabled: q.length > 1,
+      placeholderData: keepPreviousData,
+      staleTime: 5 * 60_000,
+      retry: false,
+    },
   );
-  const tracks = resultTracks(search.data).slice(0, 10);
+  const spotifyFirst = useViewer()?.connections.spotifyPlayback ?? false;
+  const tracks = resultTracks(search.data, { spotifyFirst }).slice(0, 10);
 
   return (
     <section className="mt-8 border-t border-white/[0.08] px-6 pt-8 pb-12">
@@ -76,8 +83,10 @@ export function FindMore({
         {q.length > 1 && search.data && tracks.length === 0 && (
           <p className="text-fg-muted py-6 text-sm">
             {search.data.isLink
-              ? "That link doesn't point to a track or video we can add."
-              : search.data.youtube.status === "disabled"
+              ? search.data.link.kind === "unavailable"
+                ? search.data.link.message
+                : "That link doesn't point to anything we can add."
+              : search.data.youtube.status === "disabled" && search.data.spotify.status === "disabled"
                 ? "Searching isn't set up on this server yet. Paste a YouTube link instead."
                 : `Nothing found for “${q}”.`}
           </p>
@@ -86,7 +95,12 @@ export function FindMore({
           <TrackRow
             key={trackKey(track)}
             track={track}
-            onPlay={() => usePlayer.getState().playTracks(tracks, i, { type: "search", title: `Search: ${q}` })}
+            onPlay={() =>
+              usePlayer.getState().playTracks(tracks, i, {
+                type: "search",
+                title: `Search: ${q}`,
+              })
+            }
             actions={
               <Button
                 variant="outline"

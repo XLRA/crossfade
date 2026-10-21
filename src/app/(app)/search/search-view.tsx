@@ -1,21 +1,28 @@
 "use client";
 
 import { keepPreviousData } from "@tanstack/react-query";
-import { Clock3, Link2, Pause, Play, X } from "lucide-react";
+import { CircleAlert, Clock3, Link2, Pause, Play, Shuffle, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { Artwork } from "~/components/tracks/artwork";
-import { SourceBadge } from "~/components/tracks/source-badge";
 import { useTrackStatus } from "~/components/player/track-status";
+import { useViewer } from "~/components/providers/viewer-provider";
+import { Artwork } from "~/components/tracks/artwork";
+import { SourceBadge, SOURCE_LABEL } from "~/components/tracks/source-badge";
 import { TrackRow, TrackRowSkeleton } from "~/components/tracks/track-row";
+import { IconButton } from "~/components/ui/button";
+import { PlayButton } from "~/components/ui/play-button";
 import { cn } from "~/lib/cn";
+import { formatLongDuration, plural } from "~/lib/format";
 import { usePlayer } from "~/lib/player/store";
 import { type PlayContext } from "~/lib/player/types";
-import { type ProviderStatus, type SourceName, type TrackData, trackKey } from "~/lib/types";
 import { interleave, type SearchResult } from "~/lib/search-results";
+import { type ProviderStatus, type SourceName, type TrackData, trackKey } from "~/lib/types";
 import { api } from "~/trpc/react";
+
+type LinkData = Extract<SearchResult, { isLink: true }>["link"];
+type CollectionData = Extract<LinkData, { kind: "collection" }>;
 
 type Filter = "all" | SourceName;
 
@@ -105,11 +112,25 @@ function Results({
   error: string | null;
 }) {
   const stale = isFetching && data?.query !== q;
+  const spotifyFirst = useViewer()?.connections.spotifyPlayback ?? false;
 
   const providers = useMemo(() => {
     if (!data || data.isLink) return [];
-    return [{ source: "YOUTUBE" as const, status: data.youtube.status, tracks: data.youtube.tracks }];
-  }, [data]);
+    const list = [
+      {
+        source: "SPOTIFY" as const,
+        status: data.spotify.status,
+        tracks: data.spotify.tracks,
+      },
+      {
+        source: "YOUTUBE" as const,
+        status: data.youtube.status,
+        tracks: data.youtube.tracks,
+      },
+    ];
+    // Whoever can play Spotify in full gets it first; everyone else would only hear previews.
+    return spotifyFirst ? list : list.reverse();
+  }, [data, spotifyFirst]);
 
   if (error) {
     return <EmptyState title="Search isn't working right now" body={error} />;
@@ -119,28 +140,14 @@ function Results({
 
   if (data.isLink) {
     return (
-      <section className={cn("max-w-3xl transition-opacity", stale && "opacity-50")}>
-        <h2 className="flex items-center gap-2 text-2xl font-bold">
-          <Link2 className="text-fg-muted size-5" /> From your link
-        </h2>
-        {data.link ? (
-          <div className="mt-4">
-            <TopResult
-              track={data.link}
-              onPlay={() => usePlayer.getState().playTracks([data.link!], 0, { type: "link", title: "Your link" })}
-            />
-          </div>
-        ) : (
-          <p className="text-fg-muted mt-3">
-            That link doesn&apos;t point to a track or video we can play. Playlists and albums can be brought in from
-            the import page.
-          </p>
-        )}
-      </section>
+      <div className={cn("transition-opacity", stale && "opacity-50")}>
+        <LinkView link={data.link} />
+      </div>
     );
   }
 
-  const available = providers.filter((p) => p.tracks.length > 0);
+  // Platforms that aren't set up on this server don't get a filter chip.
+  const shown = providers.filter((p) => p.status !== "disabled" || p.tracks.length > 0);
   const merged = interleave(providers.map((p) => p.tracks));
   const visible = filter === "all" ? merged : (providers.find((p) => p.source === filter)?.tracks ?? []);
   const top = visible[0];
@@ -150,35 +157,38 @@ function Results({
     href: `/search?q=${encodeURIComponent(q)}`,
   };
   const playFrom = (index: number) => usePlayer.getState().playTracks(visible, index, context);
+  const anyAnswered = providers.some((p) => p.status === "ok");
 
   return (
     <div className={cn("transition-opacity duration-150", stale && "opacity-50")}>
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter results by platform">
-        {(["all", ...providers.map((p) => p.source)] as Filter[]).map((f) => (
-          <button
-            key={f}
-            role="tab"
-            aria-selected={filter === f}
-            onClick={() => onFilter(f)}
-            className={cn(
-              "h-8 rounded-full px-3.5 text-sm font-medium transition-colors",
-              filter === f ? "bg-fg text-ink-950" : "text-fg bg-white/[0.07] hover:bg-white/[0.12]",
-            )}
-          >
-            {f === "all" ? "All" : f === "SPOTIFY" ? "Spotify" : "YouTube"}
-          </button>
-        ))}
-      </div>
+      {shown.length > 1 && (
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filter results by platform">
+          {(["all", ...shown.map((p) => p.source)] as Filter[]).map((f) => (
+            <button
+              key={f}
+              role="tab"
+              aria-selected={filter === f}
+              onClick={() => onFilter(f)}
+              className={cn(
+                "h-8 rounded-full px-3.5 text-sm font-medium transition-colors",
+                filter === f ? "bg-fg text-ink-950" : "text-fg bg-white/[0.07] hover:bg-white/[0.12]",
+              )}
+            >
+              {f === "all" ? "All" : SOURCE_LABEL[f]}
+            </button>
+          ))}
+        </div>
+      )}
 
       <ProviderNotes providers={providers} />
 
       {visible.length === 0 ? (
-        available.length === 0 && providers.every((p) => p.status !== "ok") ? null : (
+        anyAnswered || filter !== "all" ? (
           <EmptyState
             title={`No results for “${q}”`}
             body="Check the spelling, try fewer words, or paste a link to the exact video or track."
           />
-        )
+        ) : null
       ) : (
         <>
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
@@ -214,6 +224,113 @@ function Results({
   );
 }
 
+// --- Pasted links -------------------------------------------------------------------------------
+
+function LinkView({ link }: { link: LinkData }) {
+  if (link.kind === "collection") return <CollectionResult collection={link} />;
+
+  return (
+    <section className="max-w-3xl">
+      <h2 className="flex items-center gap-2 text-2xl font-bold">
+        <Link2 className="text-fg-muted size-5" /> From your link
+      </h2>
+      {link.kind === "track" ? (
+        <div className="mt-4">
+          <TopResult
+            track={link.track}
+            onPlay={() =>
+              usePlayer.getState().playTracks([link.track], 0, {
+                type: "link",
+                title: "Your link",
+              })
+            }
+          />
+        </div>
+      ) : (
+        <p className="bg-ink-850 text-fg-muted mt-4 flex items-start gap-3 rounded-lg px-4 py-3.5">
+          <CircleAlert className="text-fg-subtle mt-0.5 size-5 shrink-0" />
+          <span>{link.message}</span>
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** An album or playlist from a pasted link, laid out like a playlist page. */
+function CollectionResult({ collection }: { collection: CollectionData }) {
+  const contextId = `${collection.source}:${collection.type}:${collection.id}`;
+  const isContext = usePlayer((s) => s.context?.type === "link" && s.context.id === contextId);
+  const playing = usePlayer((s) => s.status === "playing" || s.status === "loading") && isContext;
+  const { tracks } = collection;
+  const total = tracks.reduce((sum, t) => sum + t.durationMs, 0);
+  const context: PlayContext = {
+    type: "link",
+    id: contextId,
+    title: collection.title,
+  };
+
+  const play = (index: number, { shuffle = false } = {}) => {
+    const player = usePlayer.getState();
+    if (shuffle !== player.shuffle) player.toggleShuffle();
+    player.playTracks(tracks, index, context);
+  };
+
+  return (
+    <section>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end">
+        <Artwork
+          src={collection.artworkUrl}
+          eager
+          className="size-[min(192px,40vw)] shrink-0 rounded-md shadow-[var(--shadow-art)]"
+        />
+        <div className="min-w-0">
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <SourceBadge source={collection.source} withLabel={false} />
+            {collection.type === "album" ? "Album" : "Playlist"} on {SOURCE_LABEL[collection.source]}
+          </p>
+          <h2 className="mt-2 line-clamp-2 text-[clamp(28px,4vw,56px)] leading-[1.02] font-extrabold tracking-tight">
+            {collection.title}
+          </h2>
+          <p className="text-fg-muted mt-3 text-sm">
+            {[collection.subtitle, plural(tracks.length, "track"), total > 0 ? formatLongDuration(total) : null]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-center gap-4">
+        <PlayButton
+          playing={playing}
+          label={collection.title}
+          disabled={tracks.length === 0}
+          onClick={() => (isContext ? usePlayer.getState().togglePlay() : play(0))}
+        />
+        <IconButton
+          label="Shuffle play"
+          size="lg"
+          disabled={tracks.length === 0}
+          onClick={() => play(0, { shuffle: true })}
+        >
+          <Shuffle className="size-6" />
+        </IconButton>
+      </div>
+
+      {collection.skipped > 0 && (
+        <p className="text-fg-subtle mt-4 text-sm">
+          {plural(collection.skipped, "item")} left out: local files, podcasts, or tracks that can&apos;t play here.
+        </p>
+      )}
+
+      <div className="mt-4 max-w-4xl">
+        {tracks.map((track, i) => (
+          <TrackRow key={`${trackKey(track)}:${i}`} track={track} onPlay={() => play(i)} menu={{}} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 const NOTES: Record<SourceName, Partial<Record<ProviderStatus, string>>> = {
   YOUTUBE: {
     disabled: "YouTube search isn't set up on this server. You can still paste a YouTube link.",
@@ -222,7 +339,7 @@ const NOTES: Record<SourceName, Partial<Record<ProviderStatus, string>>> = {
     unavailable: "YouTube didn't answer this time. Try again in a moment.",
   },
   SPOTIFY: {
-    disabled: "Spotify search isn't set up on this server.",
+    quota: "Spotify asked us to slow down. Its results will be back in a minute.",
     unavailable: "Spotify didn't answer this time. Try again in a moment.",
   },
 };

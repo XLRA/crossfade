@@ -2,7 +2,7 @@ import "server-only";
 
 import { type Track } from "../../generated/prisma";
 import { type TrackData, type TrackRef, trackKey } from "~/lib/types";
-import { AdapterError, youtube } from "~/server/adapters";
+import { AdapterError, spotify, youtube } from "~/server/adapters";
 import { db } from "~/server/db";
 
 /*
@@ -71,9 +71,16 @@ async function lookupYouTube(ids: string[]): Promise<TrackData[]> {
   return out;
 }
 
-/** Platform lookups by source. Spotify joins when its adapter does. */
+/** Spotify metadata, one request per id. Nothing to fall back to if Spotify isn't set up. */
+async function lookupSpotify(ids: string[]): Promise<TrackData[]> {
+  if (!spotify.configured) return [];
+  return spotify.getTracks(ids);
+}
+
+/** Platform lookups by source. */
 const lookups: Partial<Record<TrackRef["source"], (ids: string[]) => Promise<TrackData[]>>> = {
   YOUTUBE: lookupYouTube,
+  SPOTIFY: lookupSpotify,
 };
 
 export function registerLookup(source: TrackRef["source"], lookup: (ids: string[]) => Promise<TrackData[]>) {
@@ -83,7 +90,12 @@ export function registerLookup(source: TrackRef["source"], lookup: (ids: string[
 function whereRefs(refs: TrackRef[]) {
   const bySource = new Map<TrackRef["source"], string[]>();
   for (const ref of refs) bySource.set(ref.source, [...(bySource.get(ref.source) ?? []), ref.sourceId]);
-  return { OR: [...bySource].map(([source, ids]) => ({ source, sourceId: { in: ids } })) };
+  return {
+    OR: [...bySource].map(([source, ids]) => ({
+      source,
+      sourceId: { in: ids },
+    })),
+  };
 }
 
 /**

@@ -33,3 +33,13 @@ export type LibraryPlaylist = {
   trackCount: number;
   owner: string | null;
 };
+
+/** An album or playlist from a platform, ready to play or save. */
+export type Collection = {
+  title: string;
+  subtitle: string | null;
+  artworkUrl: string | null;
+  tracks: TrackData[];
+  /** Entries that weren't playable tracks: local files, podcasts, removed or blocked items. */
+  skipped: number;
+};

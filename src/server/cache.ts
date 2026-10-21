@@ -84,6 +84,28 @@ export async function cached<T>(key: string, ttlSeconds: number, load: () => Pro
   return promise;
 }
 
+/**
+ * Stores a value we already have under the key a later lookup would use, e.g. each track from a
+ * search result, so adding one of them to a playlist doesn't call the platform again.
+ */
+export async function prime(entries: { key: string; value: unknown }[], ttlSeconds: number): Promise<void> {
+  const expiresAt = Date.now() + ttlSeconds * 1000;
+  await Promise.all(
+    entries.map(({ key, value }) => {
+      const id = storageKey(key);
+      remember(id, value, expiresAt);
+      const json = value as Parameters<typeof db.apiCache.create>[0]["data"]["value"];
+      return db.apiCache
+        .upsert({
+          where: { key: id },
+          create: { key: id, value: json, expiresAt: new Date(expiresAt) },
+          update: { value: json, expiresAt: new Date(expiresAt) },
+        })
+        .catch(() => undefined);
+    }),
+  );
+}
+
 /** Normalizes a free-text query so "Daft  Punk" and "daft punk" share a cache entry. */
 export function normalizeQuery(query: string): string {
   return query.trim().toLowerCase().replace(/\s+/g, " ");

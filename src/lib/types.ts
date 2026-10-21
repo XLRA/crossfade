@@ -1,11 +1,26 @@
 /** Types shared between server and client code. Must not import anything server-only. */
 
+/** Which outside accounts the signed-in user has linked. */
+export type Connections = {
+  spotify: boolean;
+  /** Linked, but the tokens were revoked or aged out; needs reconnecting. */
+  spotifyExpired: boolean;
+  /** Granted the scopes the Web Playback SDK needs (Premium is checked by the SDK itself). */
+  spotifyPlayback: boolean;
+  google: boolean;
+  /** Granted read access to their YouTube library (asked for separately from sign in). */
+  youtube: boolean;
+  /** Linked sign-in methods; the last one can't be disconnected. */
+  loginMethods: number;
+};
+
 export type Viewer = {
   id: string;
   name: string | null;
   username: string | null;
   email: string | null;
   image: string | null;
+  connections: Connections;
 };
 
 export type SourceName = "SPOTIFY" | "YOUTUBE";

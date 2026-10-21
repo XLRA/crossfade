@@ -4,7 +4,7 @@ import { env } from "~/env";
 import { type TrackData } from "~/lib/types";
 import { cached, normalizeQuery } from "~/server/cache";
 import { canSpendYouTube, markQuotaExhausted, spendQuota } from "~/server/quota";
-import { AdapterError, type LibraryPlaylist, type PlatformAdapter } from "./types";
+import { AdapterError, type Collection, type LibraryPlaylist, type PlatformAdapter } from "./types";
 import { decodeEntities, parseIsoDuration, splitVideoTitle, youtubeThumbnail } from "./youtube-text";
 
 const API = "https://www.googleapis.com/youtube/v3";
@@ -24,9 +24,15 @@ type Video = {
   status?: { embeddable?: boolean; privacyStatus?: string };
 };
 
-type Page<T> = { items?: T[]; nextPageToken?: string; pageInfo?: { totalResults?: number } };
+type Page<T> = {
+  items?: T[];
+  nextPageToken?: string;
+  pageInfo?: { totalResults?: number };
+};
 
-type ErrorBody = { error?: { message?: string; errors?: { reason?: string }[] } };
+type ErrorBody = {
+  error?: { message?: string; errors?: { reason?: string }[] };
+};
 
 async function request<T>(
   path: string,
@@ -103,7 +109,11 @@ async function lookup(ids: string[], accessToken?: string): Promise<TrackData[]>
     const batch = unique.slice(i, i + 50);
     const page = await request<Page<Video>>(
       "/videos",
-      { part: "snippet,contentDetails,status", id: batch.join(","), maxResults: "50" },
+      {
+        part: "snippet,contentDetails,status",
+        id: batch.join(","),
+        maxResults: "50",
+      },
       { cost: 1, accessToken },
     );
     for (const video of page.items ?? []) {
@@ -112,6 +122,34 @@ async function lookup(ids: string[], accessToken?: string): Promise<TrackData[]>
     }
   }
   return inOrder(unique, out);
+}
+
+/** Every playable video in a playlist, in playlist order. */
+async function readPlaylist(
+  playlistId: string,
+  accessToken?: string,
+): Promise<{ tracks: TrackData[]; skipped: number }> {
+  const ids: string[] = [];
+  let pageToken: string | undefined;
+  do {
+    const page = await request<Page<{ contentDetails?: { videoId?: string } }>>(
+      "/playlistItems",
+      {
+        part: "contentDetails",
+        playlistId,
+        maxResults: "50",
+        ...(pageToken ? { pageToken } : {}),
+      },
+      { cost: 1, accessToken },
+    );
+    for (const item of page.items ?? []) {
+      if (item.contentDetails?.videoId) ids.push(item.contentDetails.videoId);
+    }
+    pageToken = page.nextPageToken;
+  } while (pageToken && ids.length < MAX_IMPORT_ITEMS);
+
+  const tracks = await lookup(ids.slice(0, MAX_IMPORT_ITEMS), accessToken);
+  return { tracks, skipped: ids.length - tracks.length };
 }
 
 export const youtube = {
@@ -176,9 +214,15 @@ export const youtube = {
   async oembed(videoId: string): Promise<TrackData | null> {
     return cached(`yt:oembed:v1:${videoId}`, 60 * 60 * 24 * 7, async () => {
       const url = `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(6_000), cache: "no-store" });
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(6_000),
+        cache: "no-store",
+      });
       if (!res.ok) return null;
-      const data = (await res.json()) as { title?: string; author_name?: string };
+      const data = (await res.json()) as {
+        title?: string;
+        author_name?: string;
+      };
       if (!data.title) return null;
       const { title, artist } = splitVideoTitle(data.title, data.author_name ?? "YouTube");
       return {
@@ -228,12 +272,22 @@ export const youtube = {
       const page = await request<
         Page<{
           id: string;
-          snippet?: { title: string; description?: string; channelTitle?: string; thumbnails?: Thumbnails };
+          snippet?: {
+            title: string;
+            description?: string;
+            channelTitle?: string;
+            thumbnails?: Thumbnails;
+          };
           contentDetails?: { itemCount?: number };
         }>
       >(
         "/playlists",
-        { part: "snippet,contentDetails", mine: "true", maxResults: "50", ...(pageToken ? { pageToken } : {}) },
+        {
+          part: "snippet,contentDetails",
+          mine: "true",
+          maxResults: "50",
+          ...(pageToken ? { pageToken } : {}),
+        },
         { cost: 1, accessToken },
       );
       for (const item of page.items ?? []) {
@@ -253,28 +307,34 @@ export const youtube = {
     return out;
   },
 
-  /** Every playable video in one of the user's playlists, in playlist order. */
-  async playlistTracks(accessToken: string, playlistId: string): Promise<{ tracks: TrackData[]; skipped: number }> {
-    const ids: string[] = [];
-    let pageToken: string | undefined;
-    do {
-      const page = await request<Page<{ contentDetails?: { videoId?: string } }>>(
-        "/playlistItems",
-        {
-          part: "contentDetails",
-          playlistId,
-          maxResults: "50",
-          ...(pageToken ? { pageToken } : {}),
-        },
-        { cost: 1, accessToken },
-      );
-      for (const item of page.items ?? []) {
-        if (item.contentDetails?.videoId) ids.push(item.contentDetails.videoId);
-      }
-      pageToken = page.nextPageToken;
-    } while (pageToken && ids.length < MAX_IMPORT_ITEMS);
+  /**
+   * A playlist with its playable videos, in order. Public playlists work with the API key; private
+   * ones and "Liked videos" need the owner's token. About 2 units per 50 videos.
+   */
+  async collection(playlistId: string, accessToken?: string): Promise<Collection | null> {
+    const meta = await request<
+      Page<{
+        snippet?: {
+          title: string;
+          channelTitle?: string;
+          thumbnails?: Thumbnails;
+        };
+      }>
+    >("/playlists", { part: "snippet", id: playlistId, maxResults: "1" }, { cost: 1, accessToken });
+    const snippet = meta.items?.[0]?.snippet;
+    // "Liked videos" (LL...) isn't returned by playlists.list but its items are readable.
+    if (!snippet && !playlistId.startsWith("LL")) return null;
 
-    const tracks = await lookup(ids.slice(0, MAX_IMPORT_ITEMS), accessToken);
-    return { tracks, skipped: ids.length - tracks.length };
+    const { tracks, skipped } = await readPlaylist(playlistId, accessToken);
+    const thumbs = snippet?.thumbnails;
+    return {
+      title: snippet ? decodeEntities(snippet.title) : "Liked videos",
+      subtitle: snippet?.channelTitle ? `Playlist by ${decodeEntities(snippet.channelTitle)}` : null,
+      artworkUrl: thumbs?.medium?.url ?? thumbs?.high?.url ?? thumbs?.default?.url ?? tracks[0]?.artworkUrl ?? null,
+      tracks,
+      skipped,
+    };
   },
+
+  playlistTracks: readPlaylist,
 } satisfies PlatformAdapter & Record<string, unknown>;

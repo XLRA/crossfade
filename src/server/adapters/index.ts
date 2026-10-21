@@ -1,11 +1,12 @@
 import "server-only";
 
 import { type ProviderStatus, type SourceName, type TrackData } from "~/lib/types";
+import { spotify } from "./spotify";
 import { AdapterError } from "./types";
 import { youtube } from "./youtube";
 
-export { AdapterError } from "./types";
-export { youtube };
+export { AdapterError, type Collection } from "./types";
+export { spotify, youtube };
 
 export type ProviderResult = { status: ProviderStatus; tracks: TrackData[] };
 
@@ -16,7 +17,7 @@ export async function settle(source: SourceName, run: () => Promise<TrackData[]>
   } catch (error) {
     if (error instanceof AdapterError) {
       if (error.code === "not_configured") return { status: "disabled", tracks: [] };
-      if (error.code === "quota") return { status: "quota", tracks: [] };
+      if (error.code === "quota" || error.code === "rate_limited") return { status: "quota", tracks: [] };
     }
     console.error(`[${source.toLowerCase()}]`, error);
     return { status: "unavailable", tracks: [] };
