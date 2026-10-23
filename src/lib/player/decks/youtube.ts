@@ -1,5 +1,5 @@
 import { loadScript } from "../load-script";
-import { type Deck, type DeckErrorKind, type DeckListener } from "./types";
+import { type Deck, type DeckErrorKind, type DeckListener, type DeckLoadOptions } from "./types";
 
 /*
  * YouTube IFrame Player API deck. https://developers.google.com/youtube/iframe_api_reference
@@ -156,7 +156,7 @@ export class YouTubeDeck implements Deck {
     this.listener?.error(this, kind, message);
   }
 
-  load(videoId: string, { autoplay, startMs, volume }: { autoplay: boolean; startMs: number; volume: number }) {
+  load(videoId: string, { autoplay, startMs, volume }: DeckLoadOptions) {
     this.videoId = videoId;
     this.volume = volume;
     this.playing = autoplay;

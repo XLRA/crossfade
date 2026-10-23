@@ -4,6 +4,15 @@ export type DeckState = "playing" | "paused" | "buffering" | "ended";
 
 export type DeckErrorKind = "not_found" | "not_embeddable" | "unsupported" | "auth" | "premium" | "network";
 
+export type DeckLoadOptions = {
+  autoplay: boolean;
+  startMs: number;
+  /** 0–1. */
+  volume: number;
+  /** The catalog's duration, shown until the platform reports its own. */
+  durationMs?: number;
+};
+
 export interface DeckListener {
   state(deck: Deck, state: DeckState): void;
   error(deck: Deck, kind: DeckErrorKind, message: string): void;
@@ -20,7 +29,7 @@ export interface Deck {
   readonly canFade: boolean;
   listener: DeckListener | null;
 
-  load(sourceId: string, options: { autoplay: boolean; startMs: number; volume: number }): void;
+  load(sourceId: string, options: DeckLoadOptions): void;
   play(): void;
   pause(): void;
   /** Stops and forgets the loaded track. */

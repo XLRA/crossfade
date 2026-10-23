@@ -1,5 +1,6 @@
 "use client";
 
+import { SpotifyEmbedDeck } from "./decks/spotify-embed";
 import { type Deck, type DeckErrorKind, type DeckListener, type DeckState } from "./decks/types";
 import { YouTubeDeck } from "./decks/youtube";
 import { peekNext } from "./queue";
@@ -29,10 +30,14 @@ const MIN_BLEND_MARGIN_MS = 5_000;
  * Runs the platform players for the store. Each track plays on a deck; a crossfade starts the
  * next track on a second deck and moves both volumes along an equal-power curve (cos/sin), so
  * loudness holds steady through the blend instead of dipping in the middle.
+ *
+ * Spotify tracks play in Spotify's embed, which has no volume control: it can't be faded, so
+ * handoffs away from it are plain cuts, and a blend into it only fades the outgoing track.
  */
 export class PlayerController implements PlaybackController, DeckListener {
   private readonly ytA: YouTubeDeck;
   private readonly ytB: YouTubeDeck;
+  private readonly spotifyEmbed: SpotifyEmbedDeck;
   protected readonly decks: Deck[];
 
   private active: Deck | null = null;
@@ -43,7 +48,8 @@ export class PlayerController implements PlaybackController, DeckListener {
   constructor(hosts: SurfaceHosts) {
     this.ytA = new YouTubeDeck("yt-a", hosts.ytA);
     this.ytB = new YouTubeDeck("yt-b", hosts.ytB);
-    this.decks = [this.ytA, this.ytB];
+    this.spotifyEmbed = new SpotifyEmbedDeck(hosts.embed);
+    this.decks = [this.ytA, this.ytB, this.spotifyEmbed];
     for (const deck of this.decks) deck.listener = this;
     registerController(this);
   }
@@ -63,20 +69,20 @@ export class PlayerController implements PlaybackController, DeckListener {
   }
 
   /** The deck an item plays on. During a blend YouTube alternates between its two decks. */
-  protected deckFor(item: QueueItem, { transition }: { transition: boolean }): Deck | null {
+  protected deckFor(item: QueueItem, { transition }: { transition: boolean }): Deck {
     if (item.track.source === "YOUTUBE") {
       if (this.active === this.ytA) return transition ? this.ytB : this.ytA;
       if (this.active === this.ytB) return transition ? this.ytA : this.ytB;
       return this.ytA;
     }
-    return null;
+    return this.spotifyEmbed;
   }
 
   private layerOf(deck: Deck | null): SurfaceLayer | null {
     if (!deck) return null;
     if (deck === this.ytA) return "yt-a";
     if (deck === this.ytB) return "yt-b";
-    if (deck.kind === "spotify-embed") return "embed";
+    if (deck === this.spotifyEmbed) return "embed";
     return null;
   }
 
@@ -89,14 +95,10 @@ export class PlayerController implements PlaybackController, DeckListener {
   load(item: QueueItem, { autoplay, startMs = 0 }: { autoplay: boolean; startMs?: number }) {
     this.endFade();
     const deck = this.deckFor(item, { transition: false });
-    if (!deck) {
-      this.store._failed(item.uid, "This track's platform isn't available here.");
-      return;
-    }
     for (const other of this.decks) if (other !== deck && other.loadedId()) other.stop();
     this.active = deck;
     this.activeItem = item;
-    deck.load(item.track.sourceId, { autoplay, startMs, volume: this.volume() });
+    deck.load(item.track.sourceId, { autoplay, startMs, volume: this.volume(), durationMs: item.track.durationMs });
     this.show(deck);
     this.startTicking();
   }
@@ -181,6 +183,8 @@ export class PlayerController implements PlaybackController, DeckListener {
   private maybeBlend(position: number, duration: number) {
     const store = this.store;
     const fadeMs = store.crossfadeSeconds * 1000;
+    // Without volume control the outgoing track can only be cut off, so let it finish instead.
+    if (!this.active?.canFade) return;
     if (fadeMs <= 0 || duration <= 0 || position <= 0) return;
     if (duration < fadeMs * 2 + MIN_BLEND_MARGIN_MS) return;
     const remaining = duration - position;
@@ -190,7 +194,7 @@ export class PlayerController implements PlaybackController, DeckListener {
     if (!next || next.uid === store.current?.uid) return;
     const incoming = this.deckFor(next, { transition: true });
     // A platform that can only play one thing at a time just ends and hands over normally.
-    if (!incoming || incoming === this.active) return;
+    if (incoming === this.active) return;
     this.beginBlend(incoming, Math.max(1_000, remaining));
   }
 
@@ -209,6 +213,7 @@ export class PlayerController implements PlaybackController, DeckListener {
       autoplay: true,
       startMs: 0,
       volume: incoming.canFade ? 0 : this.volume(),
+      durationMs: item.track.durationMs,
     });
     this.show(incoming);
     this.fade = {
