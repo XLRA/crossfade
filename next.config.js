@@ -35,8 +35,14 @@ const config = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           {
             key: "Permissions-Policy",
-            value:
-              'camera=(), microphone=(), geolocation=(), autoplay=(self "https://www.youtube.com" "https://open.spotify.com")',
+            // The players need autoplay (and Spotify's SDK, DRM) inside their iframes.
+            value: [
+              "camera=()",
+              "microphone=()",
+              "geolocation=()",
+              'autoplay=(self "https://www.youtube.com" "https://open.spotify.com" "https://sdk.scdn.co")',
+              'encrypted-media=(self "https://www.youtube.com" "https://open.spotify.com" "https://sdk.scdn.co")',
+            ].join(", "),
           },
         ],
       },

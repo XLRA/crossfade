@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { MediaSurface, VideoDock } from "~/components/player/media-surface";
 import { useViewer } from "~/components/providers/viewer-provider";
+import { setSpotifyTokenSource } from "~/lib/player/decks/spotify-sdk";
 import { restorePlayer, startPersisting } from "~/lib/player/persist";
 import { usePlayer } from "~/lib/player/store";
 import { trackKey } from "~/lib/types";
@@ -17,6 +18,7 @@ export function PlayerRuntime() {
   }, []);
 
   useDurationReports();
+  useSpotifyPlayback();
 
   return (
     <>
@@ -55,4 +57,23 @@ function useDurationReports() {
       { equalityFn: (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2] },
     );
   }, [viewer, mutate]);
+}
+
+/**
+ * Hands the Spotify SDK deck a way to get the viewer's token when they've connected Spotify with
+ * playback access. Without it (guests, Google-only accounts), Spotify tracks play in the embed.
+ */
+function useSpotifyPlayback() {
+  const connections = useViewer()?.connections;
+  const canStream = Boolean(connections?.spotifyPlayback && !connections.spotifyExpired);
+  const utils = api.useUtils();
+
+  useEffect(() => {
+    if (!canStream) {
+      setSpotifyTokenSource(null);
+      return;
+    }
+    setSpotifyTokenSource(() => utils.client.account.spotifyPlaybackToken.query());
+    return () => setSpotifyTokenSource(null);
+  }, [canStream, utils]);
 }
