@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -29,6 +29,13 @@ export function UserMenu({ viewer }: { viewer: Viewer }) {
             {viewer.username && <p className="text-fg-muted truncate text-xs">@{viewer.username}</p>}
           </div>
         </div>
+        <MenuSeparator />
+        <MenuItem asChild>
+          <Link href="/settings">
+            <Settings />
+            Settings
+          </Link>
+        </MenuItem>
         <MenuSeparator />
         <form action={signOutAction}>
           <MenuItem asChild>
