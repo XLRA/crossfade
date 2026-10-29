@@ -112,17 +112,22 @@ model Track {
 // ---------------------------------------------------------------------------------------------
 
 model Playlist {
-  id          String   @id @default(cuid())
-  ownerId     String
-  title       String   @db.VarChar(100)
-  description String?  @db.VarChar(300)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String    @id @default(cuid())
+  ownerId        String
+  title          String    @db.VarChar(100)
+  description    String?   @db.VarChar(300)
+  /// The Spotify or YouTube playlist (or album) this was imported from, if any.
+  importSource   Source?
+  importSourceId String?   @db.VarChar(64)
+  importedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   owner  User            @relation("PlaylistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   tracks PlaylistTrack[]
 
   @@index([ownerId, updatedAt])
+  @@index([ownerId, importSource, importSourceId])
 }
 
 /// A track's slot in a playlist. `position` is 0-based and kept gap-free; reordering shifts the

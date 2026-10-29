@@ -4,9 +4,7 @@ import { z } from "zod";
 import { coverImages, trackKey } from "~/lib/types";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { ensureTracks, fromRow } from "~/server/catalog";
-import { lockPlaylist, renumber, requireRole, touch } from "~/server/playlists";
-
-export const MAX_PLAYLIST_TRACKS = 2_000;
+import { lockPlaylist, MAX_PLAYLIST_TRACKS, renumber, requireRole, touch } from "~/server/playlists";
 
 const trackRef = z.object({
   source: z.enum(["SPOTIFY", "YOUTUBE"]),
@@ -54,6 +52,7 @@ export const playlistRouter = createTRPCRouter({
         id: true,
         title: true,
         description: true,
+        importSource: true,
         createdAt: true,
         updatedAt: true,
         owner: { select: { id: true, name: true, username: true, image: true } },
@@ -82,6 +81,7 @@ export const playlistRouter = createTRPCRouter({
       id: playlist.id,
       title: playlist.title,
       description: playlist.description,
+      importSource: playlist.importSource,
       createdAt: playlist.createdAt,
       updatedAt: playlist.updatedAt,
       owner: playlist.owner,

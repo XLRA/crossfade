@@ -1,5 +1,6 @@
 import { accountRouter } from "~/server/api/routers/account";
 import { healthRouter } from "~/server/api/routers/health";
+import { libraryRouter } from "~/server/api/routers/library";
 import { playlistRouter } from "~/server/api/routers/playlist";
 import { searchRouter } from "~/server/api/routers/search";
 import { trackRouter } from "~/server/api/routers/track";
@@ -13,6 +14,7 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 export const appRouter = createTRPCRouter({
   health: healthRouter,
   account: accountRouter,
+  library: libraryRouter,
   search: searchRouter,
   playlist: playlistRouter,
   track: trackRouter,

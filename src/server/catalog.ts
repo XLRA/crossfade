@@ -124,3 +124,21 @@ export async function ensureTracks(refs: TrackRef[]): Promise<Map<string, Track>
   for (const row of await db.track.findMany({ where: whereRefs(fetched) })) found.set(trackKey(row), row);
   return found;
 }
+
+/**
+ * Catalog rows for tracks that arrive with full metadata (imports), in the order given. Tracks
+ * already in the catalog keep their stored metadata.
+ */
+export async function storeTracks(tracks: TrackData[]): Promise<Track[]> {
+  const valid = tracks.filter(isValidRef);
+  if (valid.length === 0) return [];
+  const unique = [...new Map(valid.map((t) => [trackKey(t), t])).values()];
+  const rows = new Map<string, Track>();
+  // Chunked so a 500-track import doesn't become one enormous statement.
+  for (let i = 0; i < unique.length; i += 200) {
+    const chunk = unique.slice(i, i + 200);
+    await db.track.createMany({ data: chunk.map(toRow), skipDuplicates: true });
+    for (const row of await db.track.findMany({ where: whereRefs(chunk) })) rows.set(trackKey(row), row);
+  }
+  return valid.map((t) => rows.get(trackKey(t))).filter((row): row is Track => Boolean(row));
+}

@@ -5,6 +5,9 @@ import { TRPCError } from "@trpc/server";
 import { type Prisma } from "../../generated/prisma";
 import { db } from "~/server/db";
 
+/** Most tracks one playlist can hold. Imports are cut off here too. */
+export const MAX_PLAYLIST_TRACKS = 2_000;
+
 /** What someone can do with a playlist. Higher roles include everything below them. */
 export type PlaylistRole = "owner" | "editor" | "viewer";
 
