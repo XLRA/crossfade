@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PlaylistCover } from "~/components/playlists/playlist-cover";
+import { SOURCE_LABEL, SourceIcon } from "~/components/tracks/source-badge";
 import { Avatar } from "~/components/ui/avatar";
 import { Button, IconButton } from "~/components/ui/button";
 import { ConfirmDialog } from "~/components/ui/dialog";
@@ -205,7 +206,18 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
           className="size-[min(232px,60cqi)] self-center rounded-md shadow-[var(--shadow-art)] @xl:size-[min(232px,30cqi)] @xl:self-auto"
         />
         <div className="min-w-0">
-          <p className="text-sm font-medium">Playlist</p>
+          <p className="flex items-center gap-1.5 text-sm font-medium">
+            Playlist
+            {playlist.importSource && (
+              <>
+                <span className="text-white/60" aria-hidden>
+                  ·
+                </span>
+                <SourceIcon source={playlist.importSource} className="size-3.5" />
+                Imported from {SOURCE_LABEL[playlist.importSource]}
+              </>
+            )}
+          </p>
           {isOwner ? (
             <button type="button" onClick={() => setEditing(true)} className="mt-1 block max-w-full text-left">
               <h1 className={cn("font-display line-clamp-2 leading-[1.02] break-words", titleSize)}>

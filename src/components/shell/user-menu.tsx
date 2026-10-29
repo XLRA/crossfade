@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings } from "lucide-react";
+import { Import, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -30,6 +30,12 @@ export function UserMenu({ viewer }: { viewer: Viewer }) {
           </div>
         </div>
         <MenuSeparator />
+        <MenuItem asChild>
+          <Link href="/import">
+            <Import />
+            Import playlists
+          </Link>
+        </MenuItem>
         <MenuItem asChild>
           <Link href="/settings">
             <Settings />

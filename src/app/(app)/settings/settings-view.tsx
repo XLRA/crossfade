@@ -1,6 +1,7 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Import } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { toast } from "sonner";
@@ -229,6 +230,16 @@ function Connections({ viewer, available }: { viewer: Viewer; available: Record<
           />
         )}
       </div>
+
+      {(c.spotify || c.youtube) && (
+        <Link
+          href="/import"
+          className="text-fg-muted hover:text-fg mt-3 inline-flex items-center gap-1.5 text-sm font-semibold"
+        >
+          <Import className="size-4" aria-hidden />
+          Import playlists from {c.spotify && c.youtube ? "Spotify and YouTube" : c.spotify ? "Spotify" : "YouTube"}
+        </Link>
+      )}
 
       <ConfirmDialog
         open={confirm !== null}

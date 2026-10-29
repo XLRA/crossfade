@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { plural } from "~/lib/format";
-import { type TrackRef } from "~/lib/types";
+import { type SourceName, type TrackRef } from "~/lib/types";
 import { api } from "~/trpc/react";
 
 const refsOf = (tracks: TrackRef[]): TrackRef[] => tracks.map(({ source, sourceId }) => ({ source, sourceId }));
@@ -75,6 +75,43 @@ export function useCreatePlaylist() {
         return playlist;
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Couldn't create the playlist.");
+        return null;
+      }
+    },
+  };
+}
+
+export type ImportInput = { source: SourceName; kind: "playlist" | "album"; id: string };
+
+/**
+ * Copies a Spotify or YouTube playlist (or a Spotify album) into a new Crossfade playlist, then
+ * offers to open it. One hook per button, so each tracks its own pending state.
+ */
+export function useImportPlaylist() {
+  const router = useRouter();
+  const utils = api.useUtils();
+  const mutation = api.library.importPlaylist.useMutation();
+
+  return {
+    pending: mutation.isPending,
+    importPlaylist: async (input: ImportInput) => {
+      try {
+        const result = await mutation.mutateAsync(input);
+        void utils.playlist.library.invalidate();
+        void (
+          input.source === "SPOTIFY" ? utils.library.spotifyPlaylists : utils.library.youtubePlaylists
+        ).invalidate();
+        const open = () => router.push(`/playlist/${result.id}`);
+        toast(`Saved “${result.title}” to your library`, {
+          description:
+            result.skipped > 0
+              ? `${plural(result.added, "track")}. ${plural(result.skipped, "item")} couldn't come along.`
+              : plural(result.added, "track"),
+          action: { label: "Open", onClick: open },
+        });
+        return result;
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Couldn't import that playlist.");
         return null;
       }
     },

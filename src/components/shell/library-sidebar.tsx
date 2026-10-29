@@ -1,6 +1,6 @@
 "use client";
 
-import { LibraryBig, Plus, Search, Volume2, X } from "lucide-react";
+import { Import, LibraryBig, ListMusic, Plus, Search, Volume2, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -9,6 +9,7 @@ import { PlaylistCover } from "~/components/playlists/playlist-cover";
 import { useCreatePlaylist } from "~/components/playlists/use-playlist-actions";
 import { useViewer } from "~/components/providers/viewer-provider";
 import { Button, IconButton } from "~/components/ui/button";
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/ui/menu";
 import { cn } from "~/lib/cn";
 import { plural } from "~/lib/format";
 import { usePlayer } from "~/lib/player/store";
@@ -30,9 +31,25 @@ export function LibrarySidebar() {
           Your library
         </h2>
         {viewer && (
-          <IconButton label="Create playlist" size="sm" onClick={() => void createPlaylist()} disabled={pending}>
-            <Plus className="size-5" />
-          </IconButton>
+          <Menu>
+            <MenuTrigger asChild>
+              <IconButton label="Create or import a playlist" size="sm" tooltip={false} disabled={pending}>
+                <Plus className="size-5" />
+              </IconButton>
+            </MenuTrigger>
+            <MenuContent align="end">
+              <MenuItem onSelect={() => void createPlaylist()}>
+                <ListMusic />
+                New playlist
+              </MenuItem>
+              <MenuItem asChild>
+                <Link href="/import">
+                  <Import />
+                  Import from Spotify or YouTube
+                </Link>
+              </MenuItem>
+            </MenuContent>
+          </Menu>
         )}
       </div>
       {viewer ? <PlaylistList onCreate={() => void createPlaylist()} creating={pending} /> : <GuestLibrary />}
@@ -95,9 +112,14 @@ function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: 
           <p className="text-fg-muted mt-1 text-sm">
             Mix Spotify tracks and YouTube videos. Crossfade plays them straight through.
           </p>
-          <Button size="sm" className="mt-4" onClick={onCreate} disabled={creating}>
-            Create playlist
-          </Button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button size="sm" onClick={onCreate} disabled={creating}>
+              Create playlist
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/import">Import</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );

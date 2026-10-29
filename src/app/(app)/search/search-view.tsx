@@ -1,12 +1,24 @@
 "use client";
 
 import { keepPreviousData } from "@tanstack/react-query";
-import { CircleAlert, Clock3, Link2, Pause, Play, Shuffle, X } from "lucide-react";
+import {
+  CircleAlert,
+  CircleCheck,
+  CirclePlus,
+  Clock3,
+  Link2,
+  LoaderCircle,
+  Pause,
+  Play,
+  Shuffle,
+  X,
+} from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { useTrackStatus } from "~/components/player/track-status";
+import { useImportPlaylist } from "~/components/playlists/use-playlist-actions";
 import { useViewer } from "~/components/providers/viewer-provider";
 import { Artwork } from "~/components/tracks/artwork";
 import { SourceBadge, SOURCE_LABEL } from "~/components/tracks/source-badge";
@@ -258,6 +270,7 @@ function LinkView({ link }: { link: LinkData }) {
 
 /** An album or playlist from a pasted link, laid out like a playlist page. */
 function CollectionResult({ collection }: { collection: CollectionData }) {
+  const viewer = useViewer();
   const contextId = `${collection.source}:${collection.type}:${collection.id}`;
   const isContext = usePlayer((s) => s.context?.type === "link" && s.context.id === contextId);
   const playing = usePlayer((s) => s.status === "playing" || s.status === "loading") && isContext;
@@ -314,6 +327,7 @@ function CollectionResult({ collection }: { collection: CollectionData }) {
         >
           <Shuffle className="size-6" />
         </IconButton>
+        {viewer && <SaveCollection collection={collection} />}
       </div>
 
       {collection.skipped > 0 && (
@@ -328,6 +342,35 @@ function CollectionResult({ collection }: { collection: CollectionData }) {
         ))}
       </div>
     </section>
+  );
+}
+
+/** Saves the album or playlist as a Crossfade playlist; afterwards, opens the copy. */
+function SaveCollection({ collection }: { collection: CollectionData }) {
+  const router = useRouter();
+  const { importPlaylist, pending } = useImportPlaylist();
+  const [savedAs, setSavedAs] = useState<string | null>(null);
+
+  if (savedAs) {
+    return (
+      <IconButton label="Saved. Open your copy" size="lg" active onClick={() => router.push(`/playlist/${savedAs}`)}>
+        <CircleCheck className="size-7" />
+      </IconButton>
+    );
+  }
+  const save = async () => {
+    const saved = await importPlaylist({ source: collection.source, kind: collection.type, id: collection.id });
+    if (saved) setSavedAs(saved.id);
+  };
+  return (
+    <IconButton
+      label="Save as a playlist"
+      size="lg"
+      disabled={pending || collection.tracks.length === 0}
+      onClick={() => void save()}
+    >
+      {pending ? <LoaderCircle className="size-6 animate-spin" /> : <CirclePlus className="size-7" />}
+    </IconButton>
   );
 }
 
