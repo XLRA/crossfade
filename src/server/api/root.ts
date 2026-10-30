@@ -4,6 +4,7 @@ import { libraryRouter } from "~/server/api/routers/library";
 import { playlistRouter } from "~/server/api/routers/playlist";
 import { searchRouter } from "~/server/api/routers/search";
 import { trackRouter } from "~/server/api/routers/track";
+import { userRouter } from "~/server/api/routers/user";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -18,6 +19,7 @@ export const appRouter = createTRPCRouter({
   search: searchRouter,
   playlist: playlistRouter,
   track: trackRouter,
+  user: userRouter,
 });
 
 // export type definition of API

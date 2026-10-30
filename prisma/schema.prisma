@@ -31,10 +31,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  playlists   Playlist[]      @relation("PlaylistOwner")
-  tracksAdded PlaylistTrack[]
+  accounts       Account[]
+  sessions       Session[]
+  playlists      Playlist[]             @relation("PlaylistOwner")
+  collaborations PlaylistCollaborator[]
+  tracksAdded    PlaylistTrack[]
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -111,23 +112,48 @@ model Track {
 // Playlists
 // ---------------------------------------------------------------------------------------------
 
+/// Who can open a playlist besides its owner and collaborators.
+enum Visibility {
+  /// Anyone with the link, signed in or not. Listed on the owner's profile.
+  PUBLIC
+  /// Only the owner and collaborators.
+  PRIVATE
+}
+
 model Playlist {
-  id             String    @id @default(cuid())
+  id             String     @id @default(cuid())
   ownerId        String
-  title          String    @db.VarChar(100)
-  description    String?   @db.VarChar(300)
+  title          String     @db.VarChar(100)
+  description    String?    @db.VarChar(300)
+  visibility     Visibility @default(PRIVATE)
   /// The Spotify or YouTube playlist (or album) this was imported from, if any.
   importSource   Source?
-  importSourceId String?   @db.VarChar(64)
+  importSourceId String?    @db.VarChar(64)
   importedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
-  owner  User            @relation("PlaylistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  tracks PlaylistTrack[]
+  owner         User                   @relation("PlaylistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  collaborators PlaylistCollaborator[]
+  tracks        PlaylistTrack[]
 
   @@index([ownerId, updatedAt])
+  @@index([ownerId, visibility])
   @@index([ownerId, importSource, importSourceId])
+}
+
+/// Someone the owner invited to edit a playlist. Collaborators add, remove and reorder tracks;
+/// renaming, deleting and changing who it's shared with stay with the owner.
+model PlaylistCollaborator {
+  playlistId String
+  userId     String
+  addedAt    DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([playlistId, userId])
+  @@index([userId])
 }
 
 /// A track's slot in a playlist. `position` is 0-based and kept gap-free; reordering shifts the

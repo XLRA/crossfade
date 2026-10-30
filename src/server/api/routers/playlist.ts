@@ -4,7 +4,8 @@ import { z } from "zod";
 import { coverImages, trackKey } from "~/lib/types";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { ensureTracks, fromRow } from "~/server/catalog";
-import { lockPlaylist, MAX_PLAYLIST_TRACKS, renumber, requireRole, touch } from "~/server/playlists";
+import { lockPlaylist, MAX_COLLABORATORS, MAX_PLAYLIST_TRACKS, renumber, requireRole, touch } from "~/server/playlists";
+import { rateLimit } from "~/server/rate-limit";
 
 const trackRef = z.object({
   source: z.enum(["SPOTIFY", "YOUTUBE"]),
@@ -15,18 +16,26 @@ const title = z.string().trim().min(1, "Give the playlist a name.").max(100, "Ke
 
 const description = z.string().trim().max(300, "Keep the description under 300 characters.");
 
+const person = { id: true, name: true, username: true, image: true } as const;
+
 export const playlistRouter = createTRPCRouter({
-  /** The signed-in user's playlists for the sidebar, most recently changed first. */
+  /**
+   * The signed-in user's playlists for the sidebar: their own and the ones they collaborate on,
+   * most recently changed first.
+   */
   library: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
     const playlists = await ctx.db.playlist.findMany({
-      where: { ownerId: ctx.session.user.id },
+      where: { OR: [{ ownerId: userId }, { collaborators: { some: { userId } } }] },
       orderBy: { updatedAt: "desc" },
       select: {
         id: true,
         title: true,
         updatedAt: true,
+        visibility: true,
+        ownerId: true,
         owner: { select: { name: true, username: true } },
-        _count: { select: { tracks: true } },
+        _count: { select: { tracks: true, collaborators: true } },
         tracks: {
           orderBy: { position: "asc" },
           take: 12,
@@ -38,6 +47,9 @@ export const playlistRouter = createTRPCRouter({
       id: p.id,
       title: p.title,
       updatedAt: p.updatedAt,
+      role: p.ownerId === userId ? ("owner" as const) : ("editor" as const),
+      visibility: p.visibility,
+      collaborative: p._count.collaborators > 0,
       ownerName: p.owner.name ?? p.owner.username ?? "Unknown",
       trackCount: p._count.tracks,
       covers: coverImages(p.tracks.map((t) => t.track.artworkUrl)),
@@ -52,17 +64,19 @@ export const playlistRouter = createTRPCRouter({
         id: true,
         title: true,
         description: true,
+        visibility: true,
         importSource: true,
         createdAt: true,
         updatedAt: true,
-        owner: { select: { id: true, name: true, username: true, image: true } },
+        owner: { select: person },
+        collaborators: { orderBy: { addedAt: "asc" }, select: { user: { select: person } } },
         tracks: {
           orderBy: { position: "asc" },
           select: {
             id: true,
             position: true,
             addedAt: true,
-            addedBy: { select: { id: true, name: true, username: true, image: true } },
+            addedBy: { select: person },
             track: true,
           },
         },
@@ -81,10 +95,12 @@ export const playlistRouter = createTRPCRouter({
       id: playlist.id,
       title: playlist.title,
       description: playlist.description,
+      visibility: playlist.visibility,
       importSource: playlist.importSource,
       createdAt: playlist.createdAt,
       updatedAt: playlist.updatedAt,
       owner: playlist.owner,
+      collaborators: playlist.collaborators.map((c) => c.user),
       role,
       tracks,
       covers: coverImages(tracks.map((t) => t.track.artworkUrl)),
@@ -120,6 +136,67 @@ export const playlistRouter = createTRPCRouter({
     await ctx.db.playlist.delete({ where: { id: input.id } });
     return { id: input.id };
   }),
+
+  // --- Sharing -----------------------------------------------------------------------------------
+
+  setVisibility: protectedProcedure
+    .input(z.object({ id: z.string(), visibility: z.enum(["PUBLIC", "PRIVATE"]) }))
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(input.id, ctx.session.user.id, "owner");
+      return ctx.db.playlist.update({
+        where: { id: input.id },
+        data: { visibility: input.visibility },
+        select: { id: true, visibility: true },
+      });
+    }),
+
+  /** Lets someone edit the playlist, found by their username. */
+  addCollaborator: protectedProcedure
+    .input(z.object({ playlistId: z.string(), username: z.string().trim().toLowerCase().min(1).max(33) }))
+    .mutation(async ({ ctx, input }) => {
+      const me = ctx.session.user.id;
+      await requireRole(input.playlistId, me, "owner");
+      if (!rateLimit(`collab:${me}`, 30, 60_000)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Slow down a little and try again." });
+      }
+
+      const username = input.username.replace(/^@/, "");
+      const user = await ctx.db.user.findUnique({ where: { username }, select: person });
+      if (!user) throw new TRPCError({ code: "NOT_FOUND", message: `No one goes by @${username}.` });
+      if (user.id === me) throw new TRPCError({ code: "BAD_REQUEST", message: "It's your playlist already." });
+
+      return ctx.db.$transaction(async (tx) => {
+        await lockPlaylist(tx, input.playlistId);
+        const existing = await tx.playlistCollaborator.findMany({
+          where: { playlistId: input.playlistId },
+          select: { userId: true },
+        });
+        if (existing.some((c) => c.userId === user.id)) return user;
+        if (existing.length >= MAX_COLLABORATORS) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `A playlist can have up to ${MAX_COLLABORATORS} collaborators.`,
+          });
+        }
+        await tx.playlistCollaborator.create({ data: { playlistId: input.playlistId, userId: user.id } });
+        return user;
+      });
+    }),
+
+  /** The owner removes a collaborator, or a collaborator leaves. */
+  removeCollaborator: protectedProcedure
+    .input(z.object({ playlistId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const me = ctx.session.user.id;
+      const role = await requireRole(input.playlistId, me, "editor");
+      if (role !== "owner" && input.userId !== me) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only the playlist's owner can do that." });
+      }
+      const { count } = await ctx.db.playlistCollaborator.deleteMany({
+        where: { playlistId: input.playlistId, userId: input.userId },
+      });
+      return { removed: count > 0 };
+    }),
 
   /**
    * Appends tracks. Tracks already in the playlist are skipped unless `allowDuplicates`, and the

@@ -8,15 +8,32 @@ import { db } from "~/server/db";
 /** Most tracks one playlist can hold. Imports are cut off here too. */
 export const MAX_PLAYLIST_TRACKS = 2_000;
 
-/** What someone can do with a playlist. Higher roles include everything below them. */
+/** Most people one playlist can be shared with for editing. */
+export const MAX_COLLABORATORS = 20;
+
+/**
+ * What someone can do with a playlist. Higher roles include everything below them.
+ * - owner: everything, including renaming, deleting and sharing
+ * - editor: a collaborator; adds, removes and reorders tracks
+ * - viewer: anyone, signed in or not, when the playlist is public
+ */
 export type PlaylistRole = "owner" | "editor" | "viewer";
 
 const RANK: Record<PlaylistRole, number> = { viewer: 1, editor: 2, owner: 3 };
 
 export async function roleFor(playlistId: string, userId: string | null | undefined): Promise<PlaylistRole | null> {
-  const playlist = await db.playlist.findUnique({ where: { id: playlistId }, select: { ownerId: true } });
+  const playlist = await db.playlist.findUnique({
+    where: { id: playlistId },
+    select: {
+      ownerId: true,
+      visibility: true,
+      collaborators: { where: { userId: userId ?? "" }, select: { userId: true }, take: 1 },
+    },
+  });
   if (!playlist) return null;
   if (userId && playlist.ownerId === userId) return "owner";
+  if (userId && playlist.collaborators.length > 0) return "editor";
+  if (playlist.visibility === "PUBLIC") return "viewer";
   return null;
 }
 
