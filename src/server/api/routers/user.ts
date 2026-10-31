@@ -1,10 +1,45 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { coverImages } from "~/lib/types";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { rateLimit } from "~/server/rate-limit";
 
 export const userRouter = createTRPCRouter({
+  /** A profile page: the person and their public playlists. Private ones never show here. */
+  profile: publicProcedure
+    .input(z.object({ username: z.string().trim().toLowerCase().min(1).max(32) }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { username: input.username },
+        select: { id: true, name: true, username: true, image: true },
+      });
+      if (!user) throw new TRPCError({ code: "NOT_FOUND", message: `No one goes by @${input.username}.` });
+
+      const playlists = await ctx.db.playlist.findMany({
+        where: { ownerId: user.id, visibility: "PUBLIC" },
+        orderBy: { updatedAt: "desc" },
+        take: 60,
+        select: {
+          id: true,
+          title: true,
+          _count: { select: { tracks: true } },
+          tracks: { orderBy: { position: "asc" }, take: 12, select: { track: { select: { artworkUrl: true } } } },
+        },
+      });
+
+      return {
+        user,
+        isYou: ctx.session?.user.id === user.id,
+        playlists: playlists.map((p) => ({
+          id: p.id,
+          title: p.title,
+          trackCount: p._count.tracks,
+          covers: coverImages(p.tracks.map((t) => t.track.artworkUrl)),
+        })),
+      };
+    }),
+
   /**
    * People to share a playlist with. Matches the start of a username or name, so it finds the
    * person you mean without working as a directory of everyone on the site.

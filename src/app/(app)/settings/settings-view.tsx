@@ -83,7 +83,22 @@ function Profile({ viewer }: { viewer: Viewer }) {
               />
             )}
           </Field>
-          <Field label="Username" hint="Friends add you to playlists by this.">
+          <Field
+            label="Username"
+            hint={
+              <>
+                Friends add you to playlists by this.{" "}
+                {viewer.username && (
+                  <Link
+                    href={`/user/${viewer.username}`}
+                    className="text-fg-muted hover:text-fg underline underline-offset-2"
+                  >
+                    See your profile
+                  </Link>
+                )}
+              </>
+            }
+          >
             {(id) => (
               <div className="relative">
                 <span className="text-fg-subtle pointer-events-none absolute top-1/2 left-3 -translate-y-1/2">@</span>
@@ -113,7 +128,15 @@ function Profile({ viewer }: { viewer: Viewer }) {
 const inputClass =
   "h-10 w-full rounded-md bg-ink-750 px-3 text-sm outline-none ring-1 ring-transparent transition-shadow placeholder:text-fg-subtle focus:ring-white/40";
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: (id: string) => React.ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: React.ReactNode;
+  children: (id: string) => React.ReactNode;
+}) {
   const id = useId();
   return (
     <div>

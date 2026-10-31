@@ -17,6 +17,7 @@ import { PlayButton } from "~/components/ui/play-button";
 import { absoluteUrl } from "~/lib/base-path";
 import { cn } from "~/lib/cn";
 import { formatLongDuration, plural } from "~/lib/format";
+import { hueOf } from "~/lib/hue";
 import { usePlayer } from "~/lib/player/store";
 import { type PlayContext } from "~/lib/player/types";
 import { trackKey } from "~/lib/types";
@@ -25,13 +26,6 @@ import { EditDetailsDialog } from "./edit-details-dialog";
 import { FindMore } from "./find-more";
 import { ShareDialog } from "./share-dialog";
 import { type PlaylistData, type PlaylistEntry, TrackTable } from "./track-table";
-
-/** A stable, muted hue per playlist for the header wash. */
-function hueOf(id: string): number {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 33 + id.charCodeAt(i)) >>> 0;
-  return hash % 360;
-}
 
 export function PlaylistView({ id }: { id: string }) {
   const query = api.playlist.byId.useQuery(
@@ -263,7 +257,13 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
                 />
               ))}
             </span>
-            <span className="font-semibold">{playlist.owner.name ?? playlist.owner.username}</span>
+            {playlist.owner.username ? (
+              <Link href={`/user/${playlist.owner.username}`} className="font-semibold hover:underline">
+                {playlist.owner.name ?? playlist.owner.username}
+              </Link>
+            ) : (
+              <span className="font-semibold">{playlist.owner.name}</span>
+            )}
             {playlist.collaborators.length > 0 && (
               <span className="text-white/70">and {plural(playlist.collaborators.length, "other")}</span>
             )}
