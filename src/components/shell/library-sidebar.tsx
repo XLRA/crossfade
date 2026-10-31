@@ -185,7 +185,9 @@ function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: 
                       {playlist.title}
                     </p>
                     <p className="text-fg-muted truncate text-[13px] leading-5">
-                      Playlist · {plural(playlist.trackCount, "track")}
+                      {playlist.role === "editor"
+                        ? `Collaborative · ${playlist.ownerName}`
+                        : `${playlist.collaborative ? "Collaborative" : "Playlist"} · ${plural(playlist.trackCount, "track")}`}
                     </p>
                   </div>
                   {isPlaying && playing && <Volume2 className="text-accent size-4 shrink-0" aria-label="Playing" />}

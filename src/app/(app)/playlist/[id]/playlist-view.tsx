@@ -1,12 +1,13 @@
 "use client";
 
-import { Ellipsis, Link2, ListEnd, Pencil, Search, Shuffle, Trash2, X } from "lucide-react";
+import { Ellipsis, Link2, ListEnd, LogOut, Pencil, Search, Shuffle, Trash2, UserPlus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { PlaylistCover } from "~/components/playlists/playlist-cover";
+import { useViewer } from "~/components/providers/viewer-provider";
 import { SOURCE_LABEL, SourceIcon } from "~/components/tracks/source-badge";
 import { Avatar } from "~/components/ui/avatar";
 import { Button, IconButton } from "~/components/ui/button";
@@ -22,6 +23,7 @@ import { trackKey } from "~/lib/types";
 import { api } from "~/trpc/react";
 import { EditDetailsDialog } from "./edit-details-dialog";
 import { FindMore } from "./find-more";
+import { ShareDialog } from "./share-dialog";
 import { type PlaylistData, type PlaylistEntry, TrackTable } from "./track-table";
 
 /** A stable, muted hue per playlist for the header wash. */
@@ -68,6 +70,8 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [findMore, setFindMore] = useState(false);
 
   const isContext = usePlayer((s) => s.context?.type === "playlist" && s.context.id === playlist.id);
@@ -125,6 +129,16 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
     },
     onError: (error) => toast.error(error.message),
   });
+  const viewerId = useViewer()?.id;
+  const leave = api.playlist.removeCollaborator.useMutation({
+    onSuccess: () => {
+      void utils.playlist.library.invalidate();
+      void utils.playlist.byId.invalidate({ id: playlist.id });
+      toast(`You left ${playlist.title}`);
+      router.push("/");
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   const onMove = (entryId: string, toIndex: number) => {
     setEntries((list) => {
@@ -162,6 +176,10 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
     const yt = entries.filter((e) => e.track.source === "YOUTUBE").length;
     return { youtube: yt, spotify: entries.length - yt };
   }, [entries]);
+
+  // Who added what only matters once more than one person has added tracks.
+  const collaborative =
+    playlist.collaborators.length > 0 || entries.some((e) => e.addedBy && e.addedBy.id !== playlist.owner.id);
 
   // Sized against the page's own width (container query units), not the window: the side
   // panels can leave the main area narrow on a wide screen.
@@ -207,7 +225,7 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
         />
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-sm font-medium">
-            Playlist
+            {playlist.visibility === "PUBLIC" ? "Public playlist" : "Private playlist"}
             {playlist.importSource && (
               <>
                 <span className="text-white/60" aria-hidden>
@@ -233,13 +251,22 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
             <p className="mt-3 line-clamp-2 max-w-3xl text-sm text-white/70">{playlist.description}</p>
           )}
           <p className="mt-3 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
-            <Avatar
-              src={playlist.owner.image}
-              name={playlist.owner.name ?? playlist.owner.username}
-              seed={playlist.owner.id}
-              size={24}
-            />
+            <span className="flex -space-x-1.5">
+              {[playlist.owner, ...playlist.collaborators.slice(0, 3)].map((person) => (
+                <Avatar
+                  key={person.id}
+                  src={person.image}
+                  name={person.name ?? person.username}
+                  seed={person.id}
+                  size={24}
+                  className="ring-2 ring-black/25"
+                />
+              ))}
+            </span>
             <span className="font-semibold">{playlist.owner.name ?? playlist.owner.username}</span>
+            {playlist.collaborators.length > 0 && (
+              <span className="text-white/70">and {plural(playlist.collaborators.length, "other")}</span>
+            )}
             <span className="text-white/70">·</span>
             <span>{plural(entries.length, "track")}</span>
             {playlist.totalDurationMs > 0 && (
@@ -270,6 +297,11 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
           >
             <Shuffle className="size-6" />
           </IconButton>
+          {isOwner && (
+            <IconButton label="Share" size="lg" onClick={() => setSharing(true)}>
+              <UserPlus className="size-6" />
+            </IconButton>
+          )}
           <Menu modal={false}>
             <MenuTrigger asChild>
               <IconButton label={`More options for ${playlist.title}`} size="lg" tooltip={false}>
@@ -289,6 +321,10 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
               </MenuItem>
               {isOwner && (
                 <>
+                  <MenuItem onSelect={() => setSharing(true)}>
+                    <UserPlus />
+                    Share
+                  </MenuItem>
                   <MenuItem onSelect={() => setEditing(true)}>
                     <Pencil />
                     Edit details
@@ -298,6 +334,12 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
                     Delete
                   </MenuItem>
                 </>
+              )}
+              {playlist.role === "editor" && (
+                <MenuItem destructive onSelect={() => setConfirmLeave(true)}>
+                  <LogOut />
+                  Leave playlist
+                </MenuItem>
               )}
               <MenuSeparator />
               <MenuItem
@@ -359,7 +401,7 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
             <TrackTable
               entries={visible}
               canEdit={canEdit}
-              showAddedBy={false}
+              showAddedBy={collaborative}
               playingEntryKey={isContext ? currentKey : null}
               isPlaying={playing}
               sortable={!filter.trim()}
@@ -393,8 +435,26 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
         )}
       </div>
 
+      {playlist.role === "editor" && viewerId && (
+        <ConfirmDialog
+          open={confirmLeave}
+          onOpenChange={setConfirmLeave}
+          title="Leave this playlist?"
+          description={
+            <>
+              You won&apos;t be able to edit <strong className="text-fg">{playlist.title}</strong> anymore, and it
+              leaves your library. The owner can add you again.
+            </>
+          }
+          confirmLabel="Leave"
+          pending={leave.isPending}
+          onConfirm={() => leave.mutate({ playlistId: playlist.id, userId: viewerId })}
+        />
+      )}
+
       {isOwner && (
         <>
+          <ShareDialog open={sharing} onOpenChange={setSharing} playlist={playlist} />
           <EditDetailsDialog open={editing} onOpenChange={setEditing} playlist={playlist} />
           <ConfirmDialog
             open={confirmDelete}
