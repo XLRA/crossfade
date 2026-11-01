@@ -143,9 +143,14 @@ export const playlistRouter = createTRPCRouter({
     .input(z.object({ id: z.string(), visibility: z.enum(["PUBLIC", "PRIVATE"]) }))
     .mutation(async ({ ctx, input }) => {
       await requireRole(input.id, ctx.session.user.id, "owner");
+      const { updatedAt } = await ctx.db.playlist.findUniqueOrThrow({
+        where: { id: input.id },
+        select: { updatedAt: true },
+      });
       return ctx.db.playlist.update({
         where: { id: input.id },
-        data: { visibility: input.visibility },
+        // Sharing isn't an edit to the playlist itself, so it keeps its place in the library.
+        data: { visibility: input.visibility, updatedAt },
         select: { id: true, visibility: true },
       });
     }),

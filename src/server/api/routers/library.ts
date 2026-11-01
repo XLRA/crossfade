@@ -148,9 +148,11 @@ export const libraryRouter = createTRPCRouter({
         throw new TRPCError({
           code: "NOT_FOUND",
           message:
-            input.source === "SPOTIFY" && input.kind === "playlist"
-              ? "Spotify only shares the tracks of playlists you own or collaborate on."
-              : "That playlist is private or doesn't exist anymore.",
+            input.kind === "album"
+              ? "Spotify couldn't find that album. It may not be available in this region."
+              : input.source === "SPOTIFY"
+                ? "Spotify only shares the tracks of playlists you own or collaborate on."
+                : "That playlist is private or doesn't exist anymore.",
         });
       }
       if (collection.tracks.length === 0) {
