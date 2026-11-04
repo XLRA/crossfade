@@ -36,6 +36,8 @@ model User {
   playlists      Playlist[]             @relation("PlaylistOwner")
   collaborations PlaylistCollaborator[]
   tracksAdded    PlaylistTrack[]
+  likes          TrackLike[]
+  plays          Play[]
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -104,6 +106,8 @@ model Track {
   updatedAt  DateTime @updatedAt
 
   playlistEntries PlaylistTrack[]
+  likes           TrackLike[]
+  plays           Play[]
 
   @@unique([source, sourceId])
 }
@@ -173,6 +177,43 @@ model PlaylistTrack {
   @@index([playlistId, position])
   @@index([trackId])
   @@index([addedById])
+}
+
+// ---------------------------------------------------------------------------------------------
+// Listening
+// ---------------------------------------------------------------------------------------------
+
+/// A track in someone's Liked Songs.
+model TrackLike {
+  userId  String
+  trackId String
+  likedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track Track @relation(fields: [trackId], references: [id], onDelete: Restrict)
+
+  @@id([userId, trackId])
+  @@index([userId, likedAt])
+  @@index([trackId])
+}
+
+/// One listen, recorded once a track has played for 30 seconds (or half of a shorter one).
+/// Feeds "Recently played" and "Jump back in" on the home page.
+model Play {
+  id          String   @id @default(cuid())
+  userId      String
+  trackId     String
+  /// What it was played from: "playlist" (with contextId), "liked", "search", ...
+  contextType String?  @db.VarChar(16)
+  contextId   String?  @db.VarChar(64)
+  playedAt    DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track Track @relation(fields: [trackId], references: [id], onDelete: Restrict)
+
+  @@index([userId, playedAt])
+  @@index([userId, contextType, playedAt])
+  @@index([trackId])
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -20,6 +20,7 @@ import { useRef, useState } from "react";
 
 import { CrossfadeIcon } from "~/components/brand/logo";
 import { Artwork } from "~/components/tracks/artwork";
+import { LikeButton } from "~/components/tracks/likes";
 import { SourceIcon, SOURCE_LABEL } from "~/components/tracks/source-badge";
 import { IconButton } from "~/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
@@ -92,6 +93,7 @@ function NowPlaying() {
           </p>
         )}
       </div>
+      <LikeButton track={track} className="ml-1" />
     </div>
   );
 }

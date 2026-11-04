@@ -1,11 +1,12 @@
 "use client";
 
-import { Ellipsis, ExternalLink, Link2, ListEnd, ListPlus, ListStart, LogIn, Plus, Trash2 } from "lucide-react";
+import { Ellipsis, ExternalLink, Heart, Link2, ListEnd, ListPlus, ListStart, LogIn, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { useAddToPlaylist, useCreatePlaylist } from "~/components/playlists/use-playlist-actions";
 import { useViewer } from "~/components/providers/viewer-provider";
+import { useLikedKeys, useSetLiked } from "~/components/tracks/likes";
 import { SOURCE_LABEL } from "~/components/tracks/source-badge";
 import { IconButton } from "~/components/ui/button";
 import {
@@ -30,7 +31,7 @@ import { cn } from "~/lib/cn";
 import { sourceUrl } from "~/lib/links";
 import { usePlayer } from "~/lib/player/store";
 import { useSignInHref } from "~/lib/sign-in";
-import { type TrackData } from "~/lib/types";
+import { type TrackData, trackKey } from "~/lib/types";
 import { api } from "~/trpc/react";
 
 export type TrackMenuOptions = {
@@ -76,6 +77,7 @@ function TrackMenuItems({ kind, track, options }: { kind: Kind; track: TrackData
           Sign in to save to a playlist
         </Item>
       )}
+      {viewer && <LikeItem kind={kind} track={track} />}
       <Item
         onSelect={() => {
           usePlayer.getState().addToQueue([track]);
@@ -120,6 +122,18 @@ function TrackMenuItems({ kind, track, options }: { kind: Kind; track: TrackData
         Copy {SOURCE_LABEL[track.source]} link
       </Item>
     </>
+  );
+}
+
+function LikeItem({ kind, track }: { kind: Kind; track: TrackData }) {
+  const { Item } = PARTS[kind];
+  const liked = useLikedKeys().has(trackKey(track));
+  const setLiked = useSetLiked();
+  return (
+    <Item onSelect={() => void setLiked(track, !liked)}>
+      <Heart className={cn(liked && "fill-accent text-accent")} />
+      {liked ? "Remove from Liked Songs" : "Save to Liked Songs"}
+    </Item>
   );
 }
 

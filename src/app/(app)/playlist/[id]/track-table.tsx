@@ -21,6 +21,7 @@ import { Clock3, GripVertical, Pause, Play } from "lucide-react";
 
 import { Equalizer } from "~/components/player/track-status";
 import { Artwork } from "~/components/tracks/artwork";
+import { LikeButton } from "~/components/tracks/likes";
 import { ExplicitBadge, SourceIcon, SOURCE_LABEL } from "~/components/tracks/source-badge";
 import { TrackContextMenu, TrackMenuButton } from "~/components/tracks/track-menu";
 import { Avatar } from "~/components/ui/avatar";
@@ -216,6 +217,7 @@ function TrackTableRow({
         </div>
 
         <div role="cell" className="flex items-center justify-end gap-1">
+          <LikeButton track={track} revealOnHover />
           <span className="tabular w-11 text-right text-[13px]">{formatDuration(track.durationMs)}</span>
           <TrackMenuButton
             track={track}

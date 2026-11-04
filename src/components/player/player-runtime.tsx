@@ -19,6 +19,7 @@ export function PlayerRuntime() {
 
   useDurationReports();
   useSpotifyPlayback();
+  usePlayHistory();
 
   return (
     <>
@@ -55,6 +56,46 @@ function useDurationReports() {
         mutate({ source: track.source, sourceId: track.sourceId, durationMs: Math.round(durationMs) });
       },
       { equalityFn: (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2] },
+    );
+  }, [viewer, mutate]);
+}
+
+/** How long a track has to play before it counts as a listen: 30 s, or half of a shorter one. */
+export function listenThresholdMs(durationMs: number): number {
+  if (durationMs <= 0) return 30_000;
+  return Math.min(30_000, Math.max(5_000, durationMs / 2));
+}
+
+/**
+ * Records a listen once the current track has played long enough. Each queue entry counts once,
+ * so pausing and seeking around in the same play doesn't add more.
+ */
+function usePlayHistory() {
+  const viewer = useViewer();
+  const utils = api.useUtils();
+  const record = api.history.record.useMutation({
+    onSuccess: ({ recorded }) => {
+      if (recorded) void utils.home.feed.invalidate();
+    },
+  });
+  const { mutate } = record;
+
+  useEffect(() => {
+    if (!viewer) return;
+    let counted: string | null = null;
+    return usePlayer.subscribe(
+      (s) => [s.current, s.positionMs, s.durationMs, s.status] as const,
+      ([current, positionMs, durationMs, status]) => {
+        if (!current || status !== "playing" || counted === current.uid) return;
+        if (positionMs < listenThresholdMs(durationMs)) return;
+        counted = current.uid;
+        const { context } = usePlayer.getState();
+        mutate({
+          track: { source: current.track.source, sourceId: current.track.sourceId },
+          context: context ? { type: context.type, id: context.id?.slice(0, 64) } : null,
+        });
+      },
+      { equalityFn: (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] },
     );
   }, [viewer, mutate]);
 }

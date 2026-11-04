@@ -4,6 +4,7 @@ import { Pause, Play } from "lucide-react";
 
 import { Equalizer, useTrackStatus } from "~/components/player/track-status";
 import { Artwork } from "~/components/tracks/artwork";
+import { LikeButton } from "~/components/tracks/likes";
 import { ExplicitBadge, SourceIcon, SOURCE_LABEL } from "~/components/tracks/source-badge";
 import { TrackContextMenu, TrackMenuButton, type TrackMenuOptions } from "~/components/tracks/track-menu";
 import { cn } from "~/lib/cn";
@@ -77,6 +78,7 @@ export function TrackRow({
 
       <div className="flex items-center gap-1">
         {actions}
+        <LikeButton track={track} revealOnHover />
         <span className="tabular text-fg-muted w-12 text-right text-sm">{formatDuration(track.durationMs)}</span>
         {menu && (
           <TrackMenuButton

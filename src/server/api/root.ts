@@ -1,6 +1,9 @@
 import { accountRouter } from "~/server/api/routers/account";
 import { healthRouter } from "~/server/api/routers/health";
+import { historyRouter } from "~/server/api/routers/history";
+import { homeRouter } from "~/server/api/routers/home";
 import { libraryRouter } from "~/server/api/routers/library";
+import { likesRouter } from "~/server/api/routers/likes";
 import { playlistRouter } from "~/server/api/routers/playlist";
 import { searchRouter } from "~/server/api/routers/search";
 import { trackRouter } from "~/server/api/routers/track";
@@ -16,6 +19,9 @@ export const appRouter = createTRPCRouter({
   health: healthRouter,
   account: accountRouter,
   library: libraryRouter,
+  likes: likesRouter,
+  history: historyRouter,
+  home: homeRouter,
   search: searchRouter,
   playlist: playlistRouter,
   track: trackRouter,

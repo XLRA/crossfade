@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { PlaylistCover } from "~/components/playlists/playlist-cover";
+import { LikedCover, useLikedKeys } from "~/components/tracks/likes";
 import { useCreatePlaylist } from "~/components/playlists/use-playlist-actions";
 import { useViewer } from "~/components/providers/viewer-provider";
 import { Button, IconButton } from "~/components/ui/button";
@@ -77,7 +78,10 @@ function GuestLibrary() {
 function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: boolean }) {
   const library = api.playlist.library.useQuery(undefined, { staleTime: 30_000 });
   const pathname = usePathname();
-  const playingFrom = usePlayer((s) => (s.context?.type === "playlist" ? s.context.id : null));
+  const liked = useLikedKeys();
+  const playingFrom = usePlayer((s) =>
+    s.context?.type === "playlist" ? s.context.id : s.context?.type === "liked" ? "liked" : null,
+  );
   const playing = usePlayer((s) => s.status === "playing" || s.status === "loading");
   const [filter, setFilter] = useState("");
   const [filtering, setFiltering] = useState(false);
@@ -104,7 +108,7 @@ function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: 
     );
   }
 
-  if ((library.data ?? []).length === 0) {
+  if ((library.data ?? []).length === 0 && liked.size === 0) {
     return (
       <div className="scroll-area flex-1 px-2 pb-2">
         <div className="bg-ink-850 m-2 rounded-lg p-4">
@@ -165,6 +169,36 @@ function PlaylistList({ onCreate, creating }: { onCreate: () => void; creating: 
       </div>
       <nav aria-label="Playlists" className="scroll-area flex-1 px-2 pb-2">
         <ul>
+          {!filter.trim() && (
+            <li>
+              <Link
+                href="/liked"
+                aria-current={pathname === "/liked" ? "page" : undefined}
+                className={cn(
+                  "group flex items-center gap-3 rounded-md p-2 transition-colors",
+                  pathname === "/liked" ? "bg-white/[0.08] hover:bg-white/[0.11]" : "hover:bg-white/[0.05]",
+                )}
+              >
+                <LikedCover className="size-12 rounded-md" />
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={cn(
+                      "truncate text-[15px] leading-5",
+                      playingFrom === "liked" ? "text-accent" : "text-fg",
+                    )}
+                  >
+                    Liked Songs
+                  </p>
+                  <p className="text-fg-muted truncate text-[13px] leading-5">
+                    Playlist · {plural(liked.size, "song")}
+                  </p>
+                </div>
+                {playingFrom === "liked" && playing && (
+                  <Volume2 className="text-accent size-4 shrink-0" aria-label="Playing" />
+                )}
+              </Link>
+            </li>
+          )}
           {playlists.map((playlist) => {
             const href = `/playlist/${playlist.id}`;
             const active = pathname === href;
