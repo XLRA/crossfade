@@ -3,6 +3,9 @@ import { coverImages, type TrackData } from "~/lib/types";
 import { youtube } from "~/server/adapters";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { fromRow } from "~/server/catalog";
+import { type db as database } from "~/server/db";
+
+type Db = typeof database;
 
 export type HomePlaylist = {
   id: string;
@@ -36,6 +39,21 @@ function toCard(p: {
   };
 }
 
+/** Public playlists other listeners have been working on lately. */
+async function community(db: Db, userId: string | undefined): Promise<HomePlaylist[]> {
+  const rows = await db.playlist.findMany({
+    where: {
+      visibility: "PUBLIC",
+      tracks: { some: {} },
+      ...(userId && { ownerId: { not: userId }, NOT: { collaborators: { some: { userId } } } }),
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 16,
+    select: playlistCard,
+  });
+  return rows.map(toCard);
+}
+
 async function trending(): Promise<TrackData[]> {
   if (!youtube.configured) return [];
   // The same two-letter code Spotify uses for its market works as a YouTube region.
@@ -47,16 +65,17 @@ async function trending(): Promise<TrackData[]> {
 
 export const homeRouter = createTRPCRouter({
   /**
-   * Everything the home page shows, in one round trip. Guests get the trending shelf; signed-in
-   * listeners also get what they played recently and their own playlists.
+   * Everything the home page shows, in one round trip. Guests get public playlists and the
+   * trending shelf; signed-in listeners also get what they played recently and their own playlists.
    */
   feed: publicProcedure.query(async ({ ctx }) => {
     const userId = ctx.session?.user.id;
     if (!userId) {
-      return { recent: [], jumpBackIn: [], playlists: [], likedCount: 0, trending: await trending() };
+      const [shared, trend] = await Promise.all([community(ctx.db, undefined), trending()]);
+      return { recent: [], jumpBackIn: [], playlists: [], likedCount: 0, community: shared, trending: trend };
     }
 
-    const [plays, library, likedCount, trend] = await Promise.all([
+    const [plays, library, likedCount, shared, trend] = await Promise.all([
       ctx.db.play.findMany({
         where: { userId },
         orderBy: { playedAt: "desc" },
@@ -70,6 +89,7 @@ export const homeRouter = createTRPCRouter({
         select: playlistCard,
       }),
       ctx.db.trackLike.count({ where: { userId } }),
+      community(ctx.db, userId),
       trending(),
     ]);
 
@@ -100,6 +120,6 @@ export const homeRouter = createTRPCRouter({
     const byId = new Map(played.map((p) => [p.id, toCard(p)]));
     const jumpBackIn = playlistIds.map((id) => byId.get(id)).filter((p): p is HomePlaylist => Boolean(p));
 
-    return { recent, jumpBackIn, playlists: library.map(toCard), likedCount, trending: trend };
+    return { recent, jumpBackIn, playlists: library.map(toCard), likedCount, community: shared, trending: trend };
   }),
 });
