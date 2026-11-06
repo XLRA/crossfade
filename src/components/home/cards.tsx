@@ -94,7 +94,7 @@ export function QuickTile({
       <Link
         href={href}
         className={cn(
-          "min-w-0 flex-1 truncate text-sm font-bold after:absolute after:inset-0 @3xl:text-[15px]",
+          "line-clamp-2 min-w-0 flex-1 text-[13px] leading-tight font-bold break-words after:absolute after:inset-0 @3xl:text-[15px]",
           isContext && "text-accent",
         )}
       >

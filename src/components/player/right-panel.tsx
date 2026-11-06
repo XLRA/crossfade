@@ -13,19 +13,25 @@ import { sourceUrl } from "~/lib/links";
 import { peekNext, remainingInContext } from "~/lib/player/queue";
 import { usePlayer } from "~/lib/player/store";
 import { type QueueItem } from "~/lib/player/types";
+import { DESKTOP_QUERY, useMediaQuery } from "~/lib/use-media-query";
 
 export const PANEL_SLOT_PRIORITY = 2;
 
-/** Spotify-style right panel: the now playing view or the queue, toggled from the player bar. */
+/**
+ * Spotify-style right panel: the now playing view or the queue, toggled from the player bar. It
+ * sits beside the page on wide screens and slides over it on tablets. Phones use the full-screen
+ * now playing sheet instead.
+ */
 export function RightPanel() {
+  const shown = useMediaQuery(DESKTOP_QUERY);
   const panel = usePlayer((s) => s.panel);
   const hasTrack = usePlayer((s) => Boolean(s.current));
-  if (!panel || (panel === "nowPlaying" && !hasTrack)) return null;
+  if (!shown || !panel || (panel === "nowPlaying" && !hasTrack)) return null;
 
   return (
     <aside
       aria-label={panel === "queue" ? "Queue" : "Now playing"}
-      className="bg-ink-900 animate-fade-in hidden w-[320px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-panel)] lg:flex xl:w-[380px]"
+      className="bg-ink-900 animate-fade-in flex w-[320px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-panel)] max-lg:absolute max-lg:inset-y-0 max-lg:right-0 max-lg:z-20 max-lg:shadow-[var(--shadow-pop)] xl:w-[380px]"
     >
       {panel === "queue" ? <QueuePanel /> : <NowPlayingPanel />}
     </aside>

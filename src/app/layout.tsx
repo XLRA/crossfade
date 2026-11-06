@@ -27,6 +27,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#08080a",
   colorScheme: "dark",
+  // Lets the bottom navigation extend under the home indicator on phones that have one.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -72,11 +72,11 @@ const HOVER_PLAY = {
     hidden: "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
     icon: "size-5",
   },
-  /** Small, at the end of a quick-access tile. */
+  /** Small, at the end of a quick-access tile. Touch screens only show it while playing. */
   tile: {
     button: "relative size-9 shrink-0",
     shown: "opacity-100",
-    hidden: "opacity-0 group-hover:opacity-100 focus-visible:opacity-100",
+    hidden: "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:hidden",
     icon: "size-4",
   },
 } as const;

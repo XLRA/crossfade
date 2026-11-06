@@ -22,7 +22,13 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
         <Logo compact />
       </Link>
 
-      <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
+      {/* Phones get search from the bottom navigation, so the box only shows on the search page. */}
+      <div
+        className={cn(
+          "min-w-0 flex-1 items-center justify-center gap-2",
+          pathname === "/search" ? "flex" : "hidden md:flex",
+        )}
+      >
         <Link
           href="/"
           aria-label="Home"
@@ -38,7 +44,7 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
         </Suspense>
       </div>
 
-      <div className="flex shrink-0 items-center justify-end gap-2 md:min-w-[200px]">{right}</div>
+      <div className="ml-auto flex shrink-0 items-center justify-end gap-2 md:ml-0 md:min-w-[200px]">{right}</div>
     </header>
   );
 }

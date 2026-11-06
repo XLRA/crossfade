@@ -18,23 +18,43 @@ import { useSignInHref } from "~/lib/sign-in";
 import { api } from "~/trpc/react";
 
 export function LibrarySidebar() {
-  const viewer = useViewer();
-  const { createPlaylist, pending } = useCreatePlaylist();
-
   return (
     <aside
       aria-label="Your library"
       className="bg-ink-900 hidden w-[284px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-panel)] md:flex lg:w-[304px]"
     >
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h2 className="text-fg flex items-center gap-2.5 text-[15px] font-semibold">
-          <LibraryBig className="text-fg-muted size-5" aria-hidden />
+      <LibraryContents />
+    </aside>
+  );
+}
+
+/** The library header and list. The sidebar shows it on wide screens, the library page on phones. */
+export function LibraryContents({ page = false }: { page?: boolean }) {
+  const viewer = useViewer();
+  const { createPlaylist, pending } = useCreatePlaylist();
+  const Heading = page ? "h1" : "h2";
+
+  return (
+    <>
+      <div className={cn("flex items-center justify-between px-4", page ? "pt-5 pb-3" : "pt-4 pb-2")}>
+        <Heading
+          className={cn(
+            "text-fg flex items-center gap-2.5",
+            page ? "font-display text-[26px]" : "text-[15px] font-semibold",
+          )}
+        >
+          {!page && <LibraryBig className="text-fg-muted size-5" aria-hidden />}
           Your library
-        </h2>
+        </Heading>
         {viewer && (
           <Menu>
             <MenuTrigger asChild>
-              <IconButton label="Create or import a playlist" size="sm" tooltip={false} disabled={pending}>
+              <IconButton
+                label="Create or import a playlist"
+                size={page ? "md" : "sm"}
+                tooltip={false}
+                disabled={pending}
+              >
                 <Plus className="size-5" />
               </IconButton>
             </MenuTrigger>
@@ -54,7 +74,7 @@ export function LibrarySidebar() {
         )}
       </div>
       {viewer ? <PlaylistList onCreate={() => void createPlaylist()} creating={pending} /> : <GuestLibrary />}
-    </aside>
+    </>
   );
 }
 

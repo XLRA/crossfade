@@ -220,7 +220,6 @@ function Extras() {
         active={panel === "nowPlaying"}
         onClick={() => togglePanel("nowPlaying")}
         disabled={!hasTrack}
-        className="hidden lg:inline-grid"
       >
         <MonitorPlay className="size-[18px]" />
         {panel === "nowPlaying" && <Dot />}
