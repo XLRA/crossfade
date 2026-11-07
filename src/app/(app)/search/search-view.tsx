@@ -31,6 +31,7 @@ import { usePlayer } from "~/lib/player/store";
 import { type PlayContext } from "~/lib/player/types";
 import { interleave, type SearchResult } from "~/lib/search-results";
 import { type ProviderStatus, type SourceName, type TrackData, trackKey } from "~/lib/types";
+import { useTapToPlay } from "~/lib/use-tap-to-play";
 import { VIBES } from "~/lib/vibes";
 import { api } from "~/trpc/react";
 
@@ -408,8 +409,13 @@ function ProviderNotes({ providers }: { providers: { source: SourceName; status:
 function TopResult({ track, onPlay }: { track: TrackData; onPlay: () => void }) {
   const status = useTrackStatus(track);
   const togglePlay = usePlayer((s) => s.togglePlay);
+  const tap = useTapToPlay(status ? togglePlay : onPlay);
   return (
-    <div onDoubleClick={onPlay} className="group bg-ink-850 hover:bg-ink-800 relative rounded-lg p-5 transition-colors">
+    <div
+      onDoubleClick={onPlay}
+      onClick={tap}
+      className="group bg-ink-850 hover:bg-ink-800 relative rounded-lg p-5 transition-colors"
+    >
       <Artwork src={track.artworkUrl} className="size-[92px] rounded-md shadow-[var(--shadow-art)]" eager />
       <p
         className={cn(

@@ -11,6 +11,7 @@ import { cn } from "~/lib/cn";
 import { formatDuration } from "~/lib/format";
 import { usePlayer } from "~/lib/player/store";
 import { type TrackData } from "~/lib/types";
+import { useTapToPlay } from "~/lib/use-tap-to-play";
 
 /**
  * Compact row used in search results, the queue and shelves: art, title, platform + artist,
@@ -34,10 +35,12 @@ export function TrackRow({
   const status = useTrackStatus(track);
   const togglePlay = usePlayer((s) => s.togglePlay);
   const press = status ? togglePlay : onPlay;
+  const tap = useTapToPlay(press);
 
   const row = (
     <div
       onDoubleClick={onPlay}
+      onClick={tap}
       className={cn(
         "group grid h-14 grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-3 rounded-md px-2 transition-colors focus-within:bg-white/[0.06] hover:bg-white/[0.06]",
         className,
@@ -79,12 +82,14 @@ export function TrackRow({
       <div className="flex items-center gap-1">
         {actions}
         <LikeButton track={track} revealOnHover />
-        <span className="tabular text-fg-muted w-12 text-right text-sm">{formatDuration(track.durationMs)}</span>
+        <span className="tabular text-fg-muted w-12 text-right text-sm max-sm:hidden">
+          {formatDuration(track.durationMs)}
+        </span>
         {menu && (
           <TrackMenuButton
             track={track}
             options={menu}
-            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
           />
         )}
       </div>

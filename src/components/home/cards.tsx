@@ -10,15 +10,18 @@ import { cn } from "~/lib/cn";
 import { formatDuration } from "~/lib/format";
 import { usePlayer } from "~/lib/player/store";
 import { type TrackData } from "~/lib/types";
+import { useTapToPlay } from "~/lib/use-tap-to-play";
 
 /** A square track card for shelves. Pressing play starts the shelf from this track. */
 export function TrackCard({ track, onPlay, className }: { track: TrackData; onPlay: () => void; className?: string }) {
   const status = useTrackStatus(track);
   const togglePlay = usePlayer((s) => s.togglePlay);
+  const tap = useTapToPlay(status ? togglePlay : onPlay);
 
   return (
     <div
       onDoubleClick={onPlay}
+      onClick={tap}
       className={cn("group relative rounded-lg p-3 transition-colors duration-200 hover:bg-white/[0.06]", className)}
     >
       <div className="relative">
@@ -41,10 +44,12 @@ export function TrackCard({ track, onPlay, className }: { track: TrackData; onPl
 export function VideoCard({ track, onPlay, className }: { track: TrackData; onPlay: () => void; className?: string }) {
   const status = useTrackStatus(track);
   const togglePlay = usePlayer((s) => s.togglePlay);
+  const tap = useTapToPlay(status ? togglePlay : onPlay);
 
   return (
     <div
       onDoubleClick={onPlay}
+      onClick={tap}
       className={cn("group relative rounded-lg p-3 transition-colors duration-200 hover:bg-white/[0.06]", className)}
     >
       <div className="relative overflow-hidden rounded-md shadow-[var(--shadow-art)]">

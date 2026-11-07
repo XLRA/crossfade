@@ -268,10 +268,13 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
               <span className="text-white/70">and {plural(playlist.collaborators.length, "other")}</span>
             )}
             <span className="text-white/70">·</span>
-            <span>{plural(entries.length, "track")}</span>
-            {playlist.totalDurationMs > 0 && (
-              <span className="text-white/70">, {formatLongDuration(playlist.totalDurationMs)}</span>
-            )}
+            {/* One span, so the flex gap doesn't open a space before the comma. */}
+            <span>
+              {plural(entries.length, "track")}
+              {playlist.totalDurationMs > 0 && (
+                <span className="text-white/70">, {formatLongDuration(playlist.totalDurationMs)}</span>
+              )}
+            </span>
             {counts.spotify > 0 && counts.youtube > 0 && (
               <span className="text-white/70">
                 · {counts.spotify} Spotify, {counts.youtube} YouTube

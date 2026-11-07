@@ -44,7 +44,7 @@ export function Slider({
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
       className={cn(
-        "group relative flex h-4 w-full cursor-pointer touch-none items-center select-none data-[disabled]:cursor-default",
+        "group relative flex h-4 w-full cursor-pointer touch-none items-center select-none data-[disabled]:cursor-default pointer-coarse:h-7",
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function Slider({
       <RadixSlider.Thumb
         aria-label={label}
         aria-valuetext={valueText}
-        className="bg-fg focus-visible:outline-accent block size-3 rounded-full opacity-0 shadow-[0_2px_6px_rgb(0_0_0/0.5)] transition-opacity group-hover:opacity-100 group-data-[disabled]:hidden focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="bg-fg focus-visible:outline-accent block size-3 rounded-full opacity-0 shadow-[0_2px_6px_rgb(0_0_0/0.5)] transition-opacity group-hover:opacity-100 group-data-[disabled]:hidden focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 pointer-coarse:opacity-100"
       />
     </RadixSlider.Root>
   );

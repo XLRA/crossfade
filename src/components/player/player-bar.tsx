@@ -165,7 +165,8 @@ function Dot() {
   return <span className="absolute bottom-0.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-current" aria-hidden />;
 }
 
-function Progress() {
+/** Seek bar with the elapsed and total time beside it, or underneath when `stacked`. */
+export function Progress({ stacked = false }: { stacked?: boolean }) {
   const position = usePlayer((s) => s.positionMs);
   const duration = usePlayer((s) => s.durationMs);
   const hasTrack = usePlayer((s) => Boolean(s.current));
@@ -177,32 +178,48 @@ function Progress() {
   const pointer = useRef(false);
 
   const shown = dragging ?? position;
+  const slider = (
+    <Slider
+      label="Seek"
+      value={shown}
+      max={Math.max(duration, 1)}
+      step={1000}
+      disabled={!hasTrack || duration <= 0}
+      valueText={`${formatDuration(shown)} of ${formatDuration(duration)}`}
+      onPointerDown={() => {
+        pointer.current = true;
+      }}
+      onPointerUp={() => {
+        // After Radix's own pointerup handler has committed.
+        setTimeout(() => {
+          pointer.current = false;
+          setDragging(null);
+        }, 0);
+      }}
+      onChange={(ms) => (pointer.current ? setDragging(ms) : seek(ms))}
+      onCommit={(ms) => {
+        seek(ms);
+        setDragging(null);
+      }}
+    />
+  );
+
+  if (stacked) {
+    return (
+      <div className="w-full">
+        {slider}
+        <div className="tabular text-fg-muted mt-1 flex justify-between text-xs">
+          <span>{formatDuration(shown)}</span>
+          <span>{formatDuration(duration)}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex w-full max-w-[640px] items-center gap-2">
       <span className="tabular text-fg-muted w-10 text-right text-xs">{hasTrack ? formatDuration(shown) : ""}</span>
-      <Slider
-        label="Seek"
-        value={shown}
-        max={Math.max(duration, 1)}
-        step={1000}
-        disabled={!hasTrack || duration <= 0}
-        valueText={`${formatDuration(shown)} of ${formatDuration(duration)}`}
-        onPointerDown={() => {
-          pointer.current = true;
-        }}
-        onPointerUp={() => {
-          // After Radix's own pointerup handler has committed.
-          setTimeout(() => {
-            pointer.current = false;
-            setDragging(null);
-          }, 0);
-        }}
-        onChange={(ms) => (pointer.current ? setDragging(ms) : seek(ms))}
-        onCommit={(ms) => {
-          seek(ms);
-          setDragging(null);
-        }}
-      />
+      {slider}
       <span className="tabular text-fg-muted w-10 text-xs">{hasTrack ? formatDuration(duration) : ""}</span>
     </div>
   );
@@ -234,7 +251,7 @@ function Extras() {
   );
 }
 
-function CrossfadeControl() {
+export function CrossfadeControl() {
   const seconds = usePlayer((s) => s.crossfadeSeconds);
   const setCrossfade = usePlayer((s) => s.setCrossfade);
   return (

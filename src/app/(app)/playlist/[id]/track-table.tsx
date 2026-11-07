@@ -27,6 +27,7 @@ import { TrackContextMenu, TrackMenuButton } from "~/components/tracks/track-men
 import { Avatar } from "~/components/ui/avatar";
 import { cn } from "~/lib/cn";
 import { formatAddedAt, formatDuration } from "~/lib/format";
+import { useTapToPlay } from "~/lib/use-tap-to-play";
 import { type RouterOutputs } from "~/trpc/react";
 
 export type PlaylistData = RouterOutputs["playlist"]["byId"];
@@ -35,10 +36,10 @@ export type PlaylistEntry = PlaylistData["tracks"][number];
 /*
  * Columns follow Spotify's playlist table: #, title, album, date added, duration. The table is a
  * container query context so columns drop out by the space the table actually has, which
- * changes when the side panels open, not by the window width.
+ * changes when the side panels open, not by the window width. On a phone it's just the tracks.
  */
-const GRID =
-  "grid grid-cols-[28px_minmax(0,1fr)_minmax(72px,auto)] @2xl:grid-cols-[28px_minmax(0,6fr)_minmax(0,4fr)_minmax(72px,auto)] @4xl:grid-cols-[28px_minmax(0,6fr)_minmax(0,4fr)_minmax(0,3fr)_minmax(72px,auto)] items-center gap-4 px-4";
+const COLUMNS =
+  "grid-cols-[minmax(0,1fr)_auto] @md:grid-cols-[28px_minmax(0,1fr)_minmax(72px,auto)] @2xl:grid-cols-[28px_minmax(0,6fr)_minmax(0,4fr)_minmax(72px,auto)] @4xl:grid-cols-[28px_minmax(0,6fr)_minmax(0,4fr)_minmax(0,3fr)_minmax(72px,auto)] items-center gap-3 px-2 @md:gap-4 @md:px-4";
 
 export function TrackTable({
   entries,
@@ -83,7 +84,11 @@ export function TrackTable({
     <div className="@container" role="table" aria-label="Tracks" aria-rowcount={entries.length + 1}>
       <div
         role="row"
-        className={cn(GRID, "bg-ink-900 text-fg-muted sticky top-16 z-10 h-9 border-b border-white/[0.08] text-[13px]")}
+        className={cn(
+          "hidden @md:grid",
+          COLUMNS,
+          "bg-ink-900 text-fg-muted sticky top-16 z-10 h-9 border-b border-white/[0.08] text-[13px]",
+        )}
       >
         <span role="columnheader" className="text-right">
           #
@@ -158,6 +163,7 @@ function TrackTableRow({
     disabled: !draggable,
   });
   const { track } = entry;
+  const tap = useTapToPlay(onPlay);
 
   return (
     <TrackContextMenu track={track} options={{ onRemove, playlistId }}>
@@ -166,14 +172,16 @@ function TrackTableRow({
         role="row"
         aria-rowindex={index + 2}
         onDoubleClick={onPlay}
+        onClick={tap}
         style={{ transform: CSS.Translate.toString(transform), transition }}
         className={cn(
-          GRID,
+          "grid",
+          COLUMNS,
           "group text-fg-muted relative h-14 rounded-md transition-colors focus-within:bg-white/[0.06] hover:bg-white/[0.06]",
           isDragging && "bg-ink-750 z-20 shadow-[var(--shadow-pop)]",
         )}
       >
-        <div role="cell" className="relative flex h-full items-center justify-end">
+        <div role="cell" className="relative hidden h-full items-center justify-end @md:flex">
           <span className={cn("tabular text-[15px] group-hover:invisible", current && "text-accent")}>
             {playing ? <Equalizer /> : index + 1}
           </span>
@@ -218,11 +226,13 @@ function TrackTableRow({
 
         <div role="cell" className="flex items-center justify-end gap-1">
           <LikeButton track={track} revealOnHover />
-          <span className="tabular w-11 text-right text-[13px]">{formatDuration(track.durationMs)}</span>
+          <span className="tabular hidden w-11 text-right text-[13px] @md:inline">
+            {formatDuration(track.durationMs)}
+          </span>
           <TrackMenuButton
             track={track}
             options={{ onRemove, playlistId }}
-            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
           />
         </div>
 

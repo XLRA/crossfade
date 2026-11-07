@@ -62,10 +62,12 @@ export function useSetLiked() {
 export function LikeButton({
   track,
   revealOnHover = false,
+  size = "sm",
   className,
 }: {
   track: TrackRef;
   revealOnHover?: boolean;
+  size?: "sm" | "lg";
   className?: string;
 }) {
   const viewer = useViewer();
@@ -76,7 +78,7 @@ export function LikeButton({
   return (
     <IconButton
       label={liked ? "Remove from Liked Songs" : "Save to Liked Songs"}
-      size="sm"
+      size={size}
       active={liked}
       tooltip={!revealOnHover}
       onClick={() => void setLiked(track, !liked)}
@@ -85,7 +87,7 @@ export function LikeButton({
         className,
       )}
     >
-      <Heart className={cn("size-4", liked && "fill-current")} />
+      <Heart className={cn(size === "lg" ? "size-6" : "size-4", liked && "fill-current")} />
     </IconButton>
   );
 }

@@ -6,6 +6,8 @@ import { useCallback, useSyncExternalStore } from "react";
 export const DESKTOP_QUERY = "(min-width: 768px)";
 /** Wide enough for the now playing and queue panel to sit beside the page instead of over it. */
 export const WIDE_QUERY = "(min-width: 1024px)";
+/** A finger rather than a mouse: no hover, and double-tap zooms instead of double-clicking. */
+export const TOUCH_QUERY = "(pointer: coarse)";
 
 /**
  * Whether a media query matches. Always false on the server and during hydration, so only use it

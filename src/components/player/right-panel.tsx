@@ -146,72 +146,78 @@ function NowPlayingPanel() {
 }
 
 function QueuePanel() {
+  const setPanel = usePlayer((s) => s.setPanel);
+  return (
+    <>
+      <PanelHeader title="Queue" onClose={() => setPanel(null)} />
+      <QueueList />
+    </>
+  );
+}
+
+/** What's playing, what's queued, and what comes next from the current list. */
+export function QueueList() {
   const current = usePlayer((s) => s.current);
   const upNext = usePlayer((s) => s.upNext);
   const context = usePlayer((s) => s.context);
   const rest = usePlayer((s) => s.order);
   const index = usePlayer((s) => s.index);
-  const { setPanel, jumpTo, removeFromQueue, clearQueue } = usePlayer.getState();
+  const { jumpTo, removeFromQueue, clearQueue } = usePlayer.getState();
   const remaining = remainingInContext({ order: rest, index });
   const shown = remaining.slice(0, 100);
 
   return (
-    <>
-      <PanelHeader title="Queue" onClose={() => setPanel(null)} />
-      <div className="scroll-area min-h-0 flex-1 px-2 pb-6">
-        {!current && upNext.length === 0 ? (
-          <div className="px-3 py-16 text-center">
-            <p className="font-semibold">Your queue is empty</p>
-            <p className="text-fg-muted mt-1 text-sm">
-              Play something, or use &ldquo;Add to queue&rdquo; on any track.
+    <div className="scroll-area min-h-0 flex-1 px-2 pb-6">
+      {!current && upNext.length === 0 ? (
+        <div className="px-3 py-16 text-center">
+          <p className="font-semibold">Your queue is empty</p>
+          <p className="text-fg-muted mt-1 text-sm">Play something, or use &ldquo;Add to queue&rdquo; on any track.</p>
+        </div>
+      ) : null}
+
+      {current && (
+        <Section title="Now playing">
+          <TrackRow track={current.track} />
+        </Section>
+      )}
+
+      {upNext.length > 0 && (
+        <Section
+          title="Next in queue"
+          action={
+            <button
+              type="button"
+              onClick={clearQueue}
+              className="text-fg-muted hover:text-fg text-[13px] font-medium hover:underline"
+            >
+              Clear queue
+            </button>
+          }
+        >
+          {upNext.map((item) => (
+            <QueueRow
+              key={item.uid}
+              item={item}
+              onPlay={() => jumpTo(item.uid)}
+              onRemove={() => removeFromQueue(item.uid)}
+            />
+          ))}
+        </Section>
+      )}
+
+      {shown.length > 0 && (
+        <Section title={context ? `Next from: ${context.title}` : "Next up"}>
+          {shown.map((item) => (
+            <QueueRow key={item.uid} item={item} onPlay={() => jumpTo(item.uid)} />
+          ))}
+          {remaining.length > shown.length && (
+            <p className="text-fg-subtle px-2 pt-2 text-[13px]">
+              and {plural(remaining.length - shown.length, "more track")}
             </p>
-          </div>
-        ) : null}
-
-        {current && (
-          <Section title="Now playing">
-            <TrackRow track={current.track} />
-          </Section>
-        )}
-
-        {upNext.length > 0 && (
-          <Section
-            title="Next in queue"
-            action={
-              <button
-                type="button"
-                onClick={clearQueue}
-                className="text-fg-muted hover:text-fg text-[13px] font-medium hover:underline"
-              >
-                Clear queue
-              </button>
-            }
-          >
-            {upNext.map((item) => (
-              <QueueRow
-                key={item.uid}
-                item={item}
-                onPlay={() => jumpTo(item.uid)}
-                onRemove={() => removeFromQueue(item.uid)}
-              />
-            ))}
-          </Section>
-        )}
-
-        {shown.length > 0 && (
-          <Section title={context ? `Next from: ${context.title}` : "Next up"}>
-            {shown.map((item) => (
-              <QueueRow key={item.uid} item={item} onPlay={() => jumpTo(item.uid)} />
-            ))}
-            {remaining.length > shown.length && (
-              <p className="text-fg-subtle px-2 pt-2 text-[13px]">
-                and {plural(remaining.length - shown.length, "more track")}
-              </p>
-            )}
-          </Section>
-        )}
-      </div>
-    </>
+          )}
+        </Section>
+      )}
+    </div>
   );
 }
 
@@ -238,7 +244,7 @@ function QueueRow({ item, onPlay, onRemove }: { item: QueueItem; onPlay: () => v
             label="Remove from queue"
             size="sm"
             onClick={onRemove}
-            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
           >
             <X className="size-4" />
           </IconButton>
