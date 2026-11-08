@@ -1,8 +1,9 @@
 import { env } from "~/env";
-import { coverImages, type TrackData } from "~/lib/types";
+import { type TrackData } from "~/lib/types";
 import { youtube } from "~/server/adapters";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { fromRow } from "~/server/catalog";
+import { playlistCovers } from "~/server/covers";
 import { type db as database } from "~/server/db";
 
 type Db = typeof database;
@@ -18,6 +19,7 @@ export type HomePlaylist = {
 const playlistCard = {
   id: true,
   title: true,
+  coverUpdatedAt: true,
   owner: { select: { name: true, username: true } },
   _count: { select: { tracks: true } },
   tracks: { orderBy: { position: "asc" }, take: 12, select: { track: { select: { artworkUrl: true } } } },
@@ -26,6 +28,7 @@ const playlistCard = {
 function toCard(p: {
   id: string;
   title: string;
+  coverUpdatedAt: Date | null;
   owner: { name: string | null; username: string | null };
   _count: { tracks: number };
   tracks: { track: { artworkUrl: string | null } }[];
@@ -33,7 +36,10 @@ function toCard(p: {
   return {
     id: p.id,
     title: p.title,
-    covers: coverImages(p.tracks.map((t) => t.track.artworkUrl)),
+    covers: playlistCovers(
+      p,
+      p.tracks.map((t) => t.track.artworkUrl),
+    ),
     ownerName: p.owner.name ?? p.owner.username ?? "Unknown",
     trackCount: p._count.tracks,
   };

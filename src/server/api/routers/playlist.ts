@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { coverImages, trackKey } from "~/lib/types";
+import { trackKey } from "~/lib/types";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { ensureTracks, fromRow } from "~/server/catalog";
+import { coverUrl, isJpeg, MAX_COVER_BYTES, playlistCovers } from "~/server/covers";
 import { lockPlaylist, MAX_COLLABORATORS, MAX_PLAYLIST_TRACKS, renumber, requireRole, touch } from "~/server/playlists";
 import { rateLimit } from "~/server/rate-limit";
 
@@ -33,6 +34,7 @@ export const playlistRouter = createTRPCRouter({
         title: true,
         updatedAt: true,
         visibility: true,
+        coverUpdatedAt: true,
         ownerId: true,
         owner: { select: { name: true, username: true } },
         _count: { select: { tracks: true, collaborators: true } },
@@ -52,7 +54,10 @@ export const playlistRouter = createTRPCRouter({
       collaborative: p._count.collaborators > 0,
       ownerName: p.owner.name ?? p.owner.username ?? "Unknown",
       trackCount: p._count.tracks,
-      covers: coverImages(p.tracks.map((t) => t.track.artworkUrl)),
+      covers: playlistCovers(
+        p,
+        p.tracks.map((t) => t.track.artworkUrl),
+      ),
     }));
   }),
 
@@ -66,6 +71,7 @@ export const playlistRouter = createTRPCRouter({
         description: true,
         visibility: true,
         importSource: true,
+        coverUpdatedAt: true,
         createdAt: true,
         updatedAt: true,
         owner: { select: person },
@@ -103,7 +109,12 @@ export const playlistRouter = createTRPCRouter({
       collaborators: playlist.collaborators.map((c) => c.user),
       role,
       tracks,
-      covers: coverImages(tracks.map((t) => t.track.artworkUrl)),
+      covers: playlistCovers(
+        playlist,
+        tracks.map((t) => t.track.artworkUrl),
+      ),
+      /** The uploaded cover, if there is one. */
+      customCover: playlist.coverUpdatedAt ? coverUrl(playlist.id, playlist.coverUpdatedAt) : null,
       totalDurationMs: tracks.reduce((sum, t) => sum + t.track.durationMs, 0),
     };
   }),
@@ -135,6 +146,49 @@ export const playlistRouter = createTRPCRouter({
     await requireRole(input.id, ctx.session.user.id, "owner");
     await ctx.db.playlist.delete({ where: { id: input.id } });
     return { id: input.id };
+  }),
+
+  /**
+   * Uploads a cover image. The browser has already cropped it square and resized it, so this
+   * only checks it's a JPEG of a sensible size before storing it.
+   */
+  setCover: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        // Base64 grows data by a third.
+        jpeg: z.string().max(Math.ceil((MAX_COVER_BYTES * 4) / 3) + 4, "That image is too large."),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await requireRole(input.id, ctx.session.user.id, "owner");
+      if (!rateLimit(`cover:${ctx.session.user.id}`, 20, 60 * 60_000)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "That's a lot of new covers. Try again later." });
+      }
+      const data = Buffer.from(input.jpeg, "base64");
+      if (data.length > MAX_COVER_BYTES || !isJpeg(data)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "That image couldn't be used. Try a JPEG or PNG." });
+      }
+      const now = new Date();
+      await ctx.db.$transaction([
+        ctx.db.playlistImage.upsert({
+          where: { playlistId: input.id },
+          create: { playlistId: input.id, data },
+          update: { data },
+        }),
+        ctx.db.playlist.update({ where: { id: input.id }, data: { coverUpdatedAt: now } }),
+      ]);
+      return { customCover: coverUrl(input.id, now) };
+    }),
+
+  /** Goes back to the mosaic of track artwork. */
+  removeCover: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    await requireRole(input.id, ctx.session.user.id, "owner");
+    await ctx.db.$transaction([
+      ctx.db.playlistImage.deleteMany({ where: { playlistId: input.id } }),
+      ctx.db.playlist.update({ where: { id: input.id }, data: { coverUpdatedAt: null } }),
+    ]);
+    return { customCover: null };
   }),
 
   // --- Sharing -----------------------------------------------------------------------------------

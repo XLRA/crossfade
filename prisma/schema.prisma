@@ -134,16 +134,30 @@ model Playlist {
   importSource   Source?
   importSourceId String?    @db.VarChar(64)
   importedAt     DateTime?
+  /// When the owner last uploaded a cover image, or null for the mosaic of track artwork. Cover
+  /// URLs carry it, so caches pick up a new image right away.
+  coverUpdatedAt DateTime?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
   owner         User                   @relation("PlaylistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   collaborators PlaylistCollaborator[]
   tracks        PlaylistTrack[]
+  image         PlaylistImage?
 
   @@index([ownerId, updatedAt])
   @@index([ownerId, visibility])
   @@index([ownerId, importSource, importSourceId])
+}
+
+/// A cover image the owner uploaded. The browser crops and resizes it to a square JPEG before
+/// sending it, so it stays small enough to keep in the database next to the playlist.
+model PlaylistImage {
+  playlistId String   @id
+  data       Bytes    @db.MediumBlob
+  updatedAt  DateTime @updatedAt
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
 }
 
 /// Someone the owner invited to edit a playlist. Collaborators add, remove and reorder tracks;

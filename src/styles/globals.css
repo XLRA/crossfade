@@ -110,6 +110,28 @@
   }
 }
 
+/*
+ * Page header colors, taken from the cover art. Registered so they can transition: the header
+ * fades from neutral into the cover's color once it has been sampled.
+ */
+@property --tint-strong {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #2a2a31;
+}
+
+@property --tint-soft {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #1a1a1f;
+}
+
+@property --tint-faint {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #141418;
+}
+
 @layer base {
   :root {
     color-scheme: dark;

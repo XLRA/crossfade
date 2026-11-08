@@ -1,6 +1,18 @@
 "use client";
 
-import { Ellipsis, Link2, ListEnd, LogOut, Pencil, Search, Shuffle, Trash2, UserPlus, X } from "lucide-react";
+import {
+  Ellipsis,
+  ImagePlus,
+  Link2,
+  ListEnd,
+  LogOut,
+  Pencil,
+  Search,
+  Shuffle,
+  Trash2,
+  UserPlus,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -14,13 +26,14 @@ import { Button, IconButton } from "~/components/ui/button";
 import { ConfirmDialog } from "~/components/ui/dialog";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/ui/menu";
 import { PlayButton } from "~/components/ui/play-button";
+import { tintColor, useArtworkTint } from "~/lib/artwork-tint";
 import { absoluteUrl } from "~/lib/base-path";
 import { cn } from "~/lib/cn";
 import { formatLongDuration, plural } from "~/lib/format";
 import { hueOf } from "~/lib/hue";
 import { usePlayer } from "~/lib/player/store";
 import { type PlayContext } from "~/lib/player/types";
-import { trackKey } from "~/lib/types";
+import { coverImages, trackKey } from "~/lib/types";
 import { api } from "~/trpc/react";
 import { EditDetailsDialog } from "./edit-details-dialog";
 import { FindMore } from "./find-more";
@@ -56,6 +69,7 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
   const router = useRouter();
   const utils = api.useUtils();
   const hue = hueOf(playlist.id);
+  const tint = useArtworkTint(playlist.covers[0]);
   const canEdit = playlist.role === "owner" || playlist.role === "editor";
   const isOwner = playlist.role === "owner";
   const entries = playlist.tracks;
@@ -166,6 +180,26 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
     return () => observer.disconnect();
   }, []);
 
+  // The track artwork mosaic, which the cover goes back to without an uploaded image.
+  const mosaic = useMemo(() => coverImages(entries.map((e) => e.track.artworkUrl)), [entries]);
+
+  // Header colors come from the cover. Neutral while it's sampled, then a fade into its color;
+  // a hue from the playlist id when there's no artwork to go by.
+  const tints =
+    tint === undefined
+      ? {}
+      : tint
+        ? {
+            "--tint-strong": tintColor(tint, 34),
+            "--tint-soft": tintColor(tint, 21),
+            "--tint-faint": tintColor(tint, 15),
+          }
+        : {
+            "--tint-strong": `hsl(${hue} 34% 36%)`,
+            "--tint-soft": `hsl(${hue} 30% 22%)`,
+            "--tint-faint": `hsl(${hue} 26% 16%)`,
+          };
+
   const counts = useMemo(() => {
     const yt = entries.filter((e) => e.track.source === "YOUTUBE").length;
     return { youtube: yt, spotify: entries.length - yt };
@@ -185,14 +219,17 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
         : "text-[clamp(36px,9cqi,92px)]";
 
   return (
-    <div className="@container relative min-h-full">
+    <div
+      className="@container relative min-h-full transition-[--tint-strong,--tint-soft,--tint-faint] duration-700"
+      style={tints as React.CSSProperties}
+    >
       <div
         className={cn(
           "sticky top-0 z-20 -mb-16 flex h-16 items-center gap-3 px-6 transition-[background-color,box-shadow] duration-200",
           stuck ? "shadow-[0_6px_16px_rgb(0_0_0/0.35)]" : "pointer-events-none",
         )}
         style={{
-          backgroundColor: stuck ? `hsl(${hue} 28% 22%)` : "transparent",
+          backgroundColor: stuck ? "var(--tint-soft)" : "transparent",
         }}
       >
         <div
@@ -208,15 +245,35 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
 
       <header
         className="flex flex-col gap-6 px-6 pt-20 pb-6 @xl:flex-row @xl:items-end"
-        style={{
-          background: `linear-gradient(180deg, hsl(${hue} 34% 36%) 0%, hsl(${hue} 30% 22%) 100%)`,
-        }}
+        style={{ background: "linear-gradient(180deg, var(--tint-strong) 0%, var(--tint-soft) 100%)" }}
       >
-        <PlaylistCover
-          covers={playlist.covers}
-          eager
-          className="size-[min(232px,60cqi)] self-center rounded-md shadow-[var(--shadow-art)] @xl:size-[min(232px,30cqi)] @xl:self-auto"
-        />
+        {isOwner ? (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            aria-label="Edit details and cover"
+            className="group relative shrink-0 self-center rounded-md @xl:self-auto"
+          >
+            <PlaylistCover
+              covers={playlist.covers}
+              eager
+              className="size-[min(232px,60cqi)] rounded-md shadow-[var(--shadow-art)] @xl:size-[min(232px,30cqi)]"
+            />
+            <span
+              aria-hidden
+              className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-md bg-black/60 text-sm font-semibold opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+            >
+              <ImagePlus className="size-9" strokeWidth={1.6} />
+              Choose photo
+            </span>
+          </button>
+        ) : (
+          <PlaylistCover
+            covers={playlist.covers}
+            eager
+            className="size-[min(232px,60cqi)] self-center rounded-md shadow-[var(--shadow-art)] @xl:size-[min(232px,30cqi)] @xl:self-auto"
+          />
+        )}
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 text-sm font-medium">
             {playlist.visibility === "PUBLIC" ? "Public playlist" : "Private playlist"}
@@ -284,11 +341,7 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
         </div>
       </header>
 
-      <div
-        style={{
-          background: `linear-gradient(180deg, hsl(${hue} 26% 16%) 0, var(--color-ink-900) 240px)`,
-        }}
-      >
+      <div style={{ background: "linear-gradient(180deg, var(--tint-faint) 0, var(--color-ink-900) 240px)" }}>
         <div ref={sentinel} />
         <div className="flex items-center gap-3 px-6 py-5">
           <PlayButton playing={playing} onClick={playAll} disabled={entries.length === 0} />
@@ -458,7 +511,7 @@ function Playlist({ playlist }: { playlist: PlaylistData }) {
       {isOwner && (
         <>
           <ShareDialog open={sharing} onOpenChange={setSharing} playlist={playlist} />
-          <EditDetailsDialog open={editing} onOpenChange={setEditing} playlist={playlist} />
+          <EditDetailsDialog open={editing} onOpenChange={setEditing} playlist={playlist} mosaic={mosaic} />
           <ConfirmDialog
             open={confirmDelete}
             onOpenChange={setConfirmDelete}

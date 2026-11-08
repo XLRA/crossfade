@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-import { coverImages } from "~/lib/types";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { playlistCovers } from "~/server/covers";
 import { rateLimit } from "~/server/rate-limit";
 
 export const userRouter = createTRPCRouter({
@@ -23,6 +23,7 @@ export const userRouter = createTRPCRouter({
         select: {
           id: true,
           title: true,
+          coverUpdatedAt: true,
           _count: { select: { tracks: true } },
           tracks: { orderBy: { position: "asc" }, take: 12, select: { track: { select: { artworkUrl: true } } } },
         },
@@ -35,7 +36,10 @@ export const userRouter = createTRPCRouter({
           id: p.id,
           title: p.title,
           trackCount: p._count.tracks,
-          covers: coverImages(p.tracks.map((t) => t.track.artworkUrl)),
+          covers: playlistCovers(
+            p,
+            p.tracks.map((t) => t.track.artworkUrl),
+          ),
         })),
       };
     }),

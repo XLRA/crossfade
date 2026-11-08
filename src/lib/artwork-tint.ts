@@ -56,10 +56,10 @@ function sample(img: HTMLImageElement): Tint | null {
 }
 
 /**
- * The dominant color of a track's artwork, for tinting the player around it. Null until the
- * image has been sampled, or when it can't be (no artwork, or the host blocks it).
+ * The dominant color of a piece of artwork, for tinting what's around it. Undefined while the
+ * image is being sampled; null when it can't be (no artwork, or the host blocks it).
  */
-export function useArtworkTint(src: string | null | undefined): Tint | null {
+export function useArtworkTint(src: string | null | undefined): Tint | null | undefined {
   const [sampled, setSampled] = useState<{ src: string; tint: Tint | null } | null>(null);
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export function useArtworkTint(src: string | null | undefined): Tint | null {
 
   if (!src) return null;
   if (sampled?.src === src) return sampled.tint;
-  return cache.get(src) ?? null;
+  return cache.get(src);
 }
 
 export const tintColor = (tint: Tint, lightness: number) => `hsl(${tint.h} ${tint.s}% ${lightness}%)`;
