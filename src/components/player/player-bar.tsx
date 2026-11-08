@@ -28,6 +28,7 @@ import { Slider } from "~/components/ui/slider";
 import { Tooltip } from "~/components/ui/tooltip";
 import { cn } from "~/lib/cn";
 import { formatDuration } from "~/lib/format";
+import { equalPower } from "~/lib/player/blend";
 import { usePlayer } from "~/lib/player/store";
 
 export function PlayerBar() {
@@ -277,8 +278,10 @@ export function CrossfadeControl() {
         </div>
         <p className="text-fg-muted mt-1 text-[13px] leading-snug">
           Blend the end of each track into the start of the next. The volumes follow an equal-power curve, so the mix
-          doesn&apos;t dip in the middle.
+          doesn&apos;t dip in the middle. Tracks that run on from each other on the same album still play straight
+          through.
         </p>
+        <CrossfadeCurve seconds={seconds} />
         <Slider
           label="Crossfade length in seconds"
           value={seconds}
@@ -294,6 +297,42 @@ export function CrossfadeControl() {
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** Window the curve diagram covers, so the blend visibly widens as the setting goes up. */
+const CURVE_WINDOW_S = 16;
+
+/**
+ * The two volume curves for the current setting: the outgoing track (light) fading down while
+ * the next one (amber) fades up, centered in a 16 second window. At zero it's a hard cut.
+ */
+function CrossfadeCurve({ seconds }: { seconds: number }) {
+  const width = 248;
+  const height = 52;
+  const top = 6;
+  const bottom = height - 6;
+  const blend = (Math.min(seconds, CURVE_WINDOW_S) / CURVE_WINDOW_S) * width;
+  const start = (width - blend) / 2;
+  const y = (gain: number) => (bottom - (bottom - top) * gain).toFixed(1);
+
+  const curve = (which: "outgoing" | "incoming") => {
+    const points: string[] = [];
+    const steps = 32;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      points.push(`${(start + blend * t).toFixed(1)} ${y(equalPower(t)[which])}`);
+    }
+    const [from, to] = which === "outgoing" ? [top, bottom] : [bottom, top];
+    return `M0 ${from} L${points.join(" L")} L${width} ${to}`;
+  };
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="mt-4 h-[52px] w-full" aria-hidden>
+      <line x1={0} x2={width} y1={bottom} y2={bottom} stroke="currentColor" strokeOpacity={0.12} />
+      <path d={curve("outgoing")} fill="none" stroke="var(--color-fg)" strokeOpacity={0.55} strokeWidth={2} />
+      <path d={curve("incoming")} fill="none" stroke="var(--color-accent)" strokeWidth={2} />
+    </svg>
   );
 }
 

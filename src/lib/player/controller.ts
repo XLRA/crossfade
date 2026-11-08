@@ -2,6 +2,7 @@
 
 import { toast } from "sonner";
 
+import { continuesAlbum, equalPower } from "./blend";
 import { SpotifyEmbedDeck } from "./decks/spotify-embed";
 import { SpotifySdkDeck } from "./decks/spotify-sdk";
 import { type Deck, type DeckErrorKind, type DeckListener, type DeckState } from "./decks/types";
@@ -44,7 +45,8 @@ const FADE_IN_MS = 1_200;
  *
  * Not every handoff can overlap. Spotify's SDK plays one stream per account, so between two
  * Spotify tracks the first fades out and the next fades in. The Spotify embed has no volume
- * control at all, so handoffs to or from it are plain cuts.
+ * control at all, so handoffs to or from it are plain cuts. And one track running into the next
+ * on the same album isn't blended at all, so albums play the way they were sequenced.
  */
 export class PlayerController implements PlaybackController, DeckListener {
   private readonly ytA: YouTubeDeck;
@@ -262,6 +264,7 @@ export class PlayerController implements PlaybackController, DeckListener {
 
     const next = peekNext(store, { auto: true });
     if (!next || next.uid === store.current?.uid) return;
+    if (store.current && continuesAlbum(store.current.track, next.track)) return;
     const incoming = this.deckFor(next, { transition: true });
 
     if (incoming !== active && incoming.canFade) {
@@ -313,8 +316,9 @@ export class PlayerController implements PlaybackController, DeckListener {
     }
     const t = Math.min(1, (now - ramp.startedAt) / ramp.durationMs);
     const volume = this.volume();
-    if (ramp.outgoing?.canFade) ramp.outgoing.setVolume(volume * Math.cos((t * Math.PI) / 2));
-    if (ramp.incoming?.canFade) ramp.incoming.setVolume(volume * Math.sin((t * Math.PI) / 2));
+    const gains = equalPower(t);
+    if (ramp.outgoing?.canFade) ramp.outgoing.setVolume(volume * gains.outgoing);
+    if (ramp.incoming?.canFade) ramp.incoming.setVolume(volume * gains.incoming);
     if (t < 1) return;
 
     if (ramp.kind === "out") {
