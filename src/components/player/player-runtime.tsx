@@ -3,9 +3,12 @@
 import { useEffect } from "react";
 
 import { MediaSurface, VideoDock } from "~/components/player/media-surface";
+import { openShortcutsHelp, ShortcutsDialog } from "~/components/player/shortcuts-dialog";
 import { useViewer } from "~/components/providers/viewer-provider";
 import { setSpotifyTokenSource } from "~/lib/player/decks/spotify-sdk";
+import { startMediaSession } from "~/lib/player/media-session";
 import { restorePlayer, startPersisting } from "~/lib/player/persist";
+import { startShortcuts } from "~/lib/player/shortcuts";
 import { usePlayer } from "~/lib/player/store";
 import { trackKey } from "~/lib/types";
 import { api } from "~/trpc/react";
@@ -16,6 +19,8 @@ export function PlayerRuntime() {
     restorePlayer();
     return startPersisting();
   }, []);
+  useEffect(() => startShortcuts(openShortcutsHelp), []);
+  useEffect(() => startMediaSession(), []);
 
   useDurationReports();
   useSpotifyPlayback();
@@ -25,6 +30,7 @@ export function PlayerRuntime() {
     <>
       <MediaSurface />
       <VideoDock />
+      <ShortcutsDialog />
     </>
   );
 }

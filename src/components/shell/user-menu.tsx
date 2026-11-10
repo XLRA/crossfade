@@ -1,11 +1,12 @@
 "use client";
 
-import { Import, LogOut, Settings, UserRound } from "lucide-react";
+import { Import, Keyboard, LogOut, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 import { signOutAction } from "~/app/signin/actions";
+import { openShortcutsHelp } from "~/components/player/shortcuts-dialog";
 import { Avatar } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/ui/menu";
@@ -49,6 +50,10 @@ export function UserMenu({ viewer }: { viewer: Viewer }) {
             <Settings />
             Settings
           </Link>
+        </MenuItem>
+        <MenuItem onSelect={openShortcutsHelp} className="pointer-coarse:hidden">
+          <Keyboard />
+          Keyboard shortcuts
         </MenuItem>
         <MenuSeparator />
         <form action={signOutAction}>
