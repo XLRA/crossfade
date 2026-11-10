@@ -6,6 +6,7 @@ import { MediaSurface, VideoDock } from "~/components/player/media-surface";
 import { openShortcutsHelp, ShortcutsDialog } from "~/components/player/shortcuts-dialog";
 import { useViewer } from "~/components/providers/viewer-provider";
 import { setSpotifyTokenSource } from "~/lib/player/decks/spotify-sdk";
+import { listenThresholdMs } from "~/lib/player/listen";
 import { startMediaSession } from "~/lib/player/media-session";
 import { restorePlayer, startPersisting } from "~/lib/player/persist";
 import { startShortcuts } from "~/lib/player/shortcuts";
@@ -64,12 +65,6 @@ function useDurationReports() {
       { equalityFn: (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2] },
     );
   }, [viewer, mutate]);
-}
-
-/** How long a track has to play before it counts as a listen: 30 s, or half of a shorter one. */
-export function listenThresholdMs(durationMs: number): number {
-  if (durationMs <= 0) return 30_000;
-  return Math.min(30_000, Math.max(5_000, durationMs / 2));
 }
 
 /**
