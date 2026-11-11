@@ -9,7 +9,7 @@ export function formatDuration(ms: number | null | undefined): string {
   return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
 }
 
-/** Playlist totals: "1 hr 32 min", "47 min 10 sec". */
+/** Playlist totals: "1 hr 32 min", "47 min", and seconds only while it's short: "4 min 10 sec". */
 export function formatLongDuration(ms: number): string {
   const total = Math.round(ms / 1000);
   const h = Math.floor(total / 3600);

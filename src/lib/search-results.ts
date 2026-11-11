@@ -1,5 +1,7 @@
 import { type TrackData } from "~/lib/types";
-import { type RouterOutputs } from "~/trpc/react";
+// `import type` is erased entirely; the inline form would keep a side-effect import of the tRPC
+// client under verbatimModuleSyntax.
+import type { RouterOutputs } from "~/trpc/react";
 
 export type SearchResult = RouterOutputs["search"]["tracks"];
 
