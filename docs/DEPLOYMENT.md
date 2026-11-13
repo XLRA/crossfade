@@ -129,10 +129,10 @@ app on the host's `127.0.0.1` only, and doesn't publish MySQL at all.
 Vercel needs a public HTTPS address to forward to. A Cloudflare Tunnel provides one without opening ports on the
 host, and the Compose file includes its connector, switched off by default:
 
-1. In Cloudflare Zero Trust, go to **Networks → Tunnels → Create a tunnel** (type Cloudflared) and copy the token
-   from the install command it shows.
-2. Add a public hostname (a "published application route") for `crossfade-origin.sleeep.dev`, or any hostname on
-   your zone, with the service `http://app:3000`.
+1. In the Cloudflare dashboard, go to **Networking → Tunnels → Create Tunnel**, name it, pick **Docker**, and copy
+   the token from the run command it shows.
+2. Add a route of type **Published application** for `crossfade-origin.sleeep.dev`, or any hostname on your zone,
+   with the service URL `http://app:3000`. Cloudflare creates the DNS record.
 3. Add two lines to `deploy/.env`, then run `docker compose -f deploy/docker-compose.prod.yml up -d` again:
 
    ```bash
@@ -210,6 +210,27 @@ docker compose -f deploy/docker-compose.prod.yml exec -T db \
 ```
 
 A Proxmox backup of the whole container also works; stop the stack first for a consistent copy.
+
+## Taking it down
+
+Crossfade shares nothing with the rest of sleeep.dev or the host, so removing it is four independent steps. Back up
+first if you want to keep any accounts or playlists.
+
+1. **sleeep.dev.** In heart's Vercel project, delete `CROSSFADE_ORIGIN` and redeploy. The rewrite drops out and
+   `/crossfade` is a 404 again. To remove the code as well, revert heart's "Serve Crossfade at /crossfade" commit.
+2. **The tunnel.** In Cloudflare, under **Networking → Tunnels**, delete the tunnel's route and then the tunnel.
+   Check the zone's DNS records afterwards and delete the `crossfade-origin` CNAME if it's still listed.
+3. **The server.** From the checkout:
+
+   ```bash
+   docker compose -f deploy/docker-compose.prod.yml down --volumes --rmi all
+   cd .. && rm -rf crossfade
+   ```
+
+   `--volumes` deletes the database and `--rmi all` the images, so nothing is left in Docker.
+
+4. **Spotify and Google.** Delete the app in the Spotify developer dashboard, and shut down the Google Cloud
+   project, which takes its OAuth client and API key with it.
 
 ## Troubleshooting
 
