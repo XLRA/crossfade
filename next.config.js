@@ -20,6 +20,13 @@ const config = {
   env: {
     NEXT_PUBLIC_BASE_PATH: BASE_PATH,
   },
+  experimental: {
+    serverActions: {
+      // Server actions reject requests whose Origin doesn't match the host they arrive on. Behind
+      // sleeep.dev they arrive on the tunnel's hostname, so the public domain is allowed by name.
+      allowedOrigins: ["sleeep.dev", "www.sleeep.dev"],
+    },
+  },
   async redirects() {
     return [
       // Requests to the bare origin (e.g. hitting the container directly) land on the app.
