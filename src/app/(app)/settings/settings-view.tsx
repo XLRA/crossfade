@@ -28,6 +28,13 @@ export function SettingsView({ viewer, available }: { viewer: Viewer; available:
       <Profile viewer={viewer} />
       <Connections viewer={viewer} available={available} />
       <Playback />
+      <p className="text-fg-subtle mt-12 text-sm">
+        What Crossfade stores and who sees it is in the{" "}
+        <Link href="/privacy" className="hover:text-fg underline underline-offset-2 transition-colors">
+          privacy policy
+        </Link>
+        .
+      </p>
     </div>
   );
 }

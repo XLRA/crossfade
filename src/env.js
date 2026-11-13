@@ -24,6 +24,8 @@ export const env = createEnv({
     /** Local-only username login so the app can be exercised without OAuth apps. */
     AUTH_DEV_LOGIN: z.enum(["true", "false"]).optional(),
     YOUTUBE_API_KEY: optional,
+    /** Where people can reach whoever runs this server about their data. Shown on /privacy. */
+    CONTACT_EMAIL: z.string().email().optional(),
     DATABASE_URL: z.string().url(),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   },
@@ -46,6 +48,7 @@ export const env = createEnv({
     AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     AUTH_DEV_LOGIN: process.env.AUTH_DEV_LOGIN,
     YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY,
+    CONTACT_EMAIL: process.env.CONTACT_EMAIL,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,

@@ -52,10 +52,15 @@ The steps below go in order. Local development is covered in the [README](../REA
 
 1. In the [Google Cloud console](https://console.cloud.google.com/), create a project and enable **YouTube Data
    API v3** under APIs & Services.
-2. Set up the **OAuth consent screen** as an external app. Sign in only asks for `openid`, `email` and `profile`.
-   Crossfade asks for `https://www.googleapis.com/auth/youtube.readonly` separately, only when someone imports their
-   YouTube playlists. That scope is sensitive: while the app is in Testing, add the people who will import as test
-   users, or submit the app for verification.
+2. Set up the **OAuth consent screen** (Google Auth Platform) as an External app. Under **Branding**, set the home
+   page to `https://sleeep.dev/crossfade` and the privacy policy to `https://sleeep.dev/crossfade/privacy`, and add
+   `sleeep.dev` as an authorized domain. Google won't publish the app without both links. Then use **Audience →
+   Publish app** so anyone can sign in, not just listed test users.
+
+   Sign in only asks for `openid`, `email` and `profile`, which don't need Google's verification. Crossfade asks for
+   `https://www.googleapis.com/auth/youtube.readonly` separately, only when someone imports their YouTube playlists.
+   That scope is sensitive, so until the app is verified Google shows an "unverified app" warning at that step and
+   caps it at 100 users.
 3. Create an **OAuth client ID** of type Web application, with these authorized redirect URIs:
    - `https://sleeep.dev/crossfade/api/auth/callback/google`
    - `http://127.0.0.1:3000/crossfade/api/auth/callback/google`
@@ -89,6 +94,7 @@ chmod 600 deploy/.env deploy/.env.production
 | `SPOTIFY_MARKET`                         | Two-letter country for search results, e.g. `US`       |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`   | From step 2                                            |
 | `YOUTUBE_API_KEY`                        | From step 2                                            |
+| `CONTACT_EMAIL`                          | Address for privacy questions, shown on `/privacy`     |
 | `AUTH_DEV_LOGIN`                         | `false` (the developer login never runs in production) |
 
 Delete the `DATABASE_URL` line: Compose builds it from `MYSQL_PASSWORD`. The server checks every variable against

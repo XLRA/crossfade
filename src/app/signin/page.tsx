@@ -112,7 +112,10 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
 
             <p className="text-fg-subtle mt-8 text-xs leading-relaxed">
               Crossfade reads your name, email and profile picture. Your playlists are only read if you choose to import
-              them, and Crossfade never posts to your accounts.
+              them, and Crossfade never posts to your accounts.{" "}
+              <Link href="/privacy" className="hover:text-fg underline underline-offset-2 transition-colors">
+                Privacy policy
+              </Link>
             </p>
           </div>
         </section>
