@@ -1,8 +1,8 @@
 import { Auth } from "@auth/core";
 import { type NextRequest } from "next/server";
 
-import { BASE_PATH } from "~/lib/base-path";
 import { authConfig } from "~/server/auth";
+import { publicAuthUrl } from "~/server/auth/public-url";
 
 /**
  * Hands the request to Auth.js with its public URL.
@@ -14,14 +14,7 @@ import { authConfig } from "~/server/auth";
  * built from AUTH_URL's origin plus the full path avoids both.
  */
 function publicRequest(req: NextRequest): Request {
-  const url = new URL(req.url);
-  if (process.env.AUTH_URL) {
-    const publicUrl = new URL(process.env.AUTH_URL);
-    url.protocol = publicUrl.protocol;
-    url.host = publicUrl.host;
-  }
-  if (!url.pathname.startsWith(`${BASE_PATH}/`)) url.pathname = `${BASE_PATH}${url.pathname}`;
-
+  const url = publicAuthUrl(req.url, process.env.AUTH_URL);
   const hasBody = req.method !== "GET" && req.method !== "HEAD";
   return new Request(url, {
     method: req.method,
