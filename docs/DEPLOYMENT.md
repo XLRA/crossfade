@@ -62,6 +62,7 @@ The steps below go in order. Local development is covered in the [README](../REA
    `https://www.googleapis.com/auth/youtube.readonly` separately, only when someone imports their YouTube playlists.
    That scope is sensitive, so until the app is verified Google shows an "unverified app" warning at that step and
    caps it at 100 users.
+
 3. Create an **OAuth client ID** of type Web application, with these authorized redirect URIs:
    - `https://sleeep.dev/crossfade/api/auth/callback/google`
    - `http://127.0.0.1:3000/crossfade/api/auth/callback/google`
