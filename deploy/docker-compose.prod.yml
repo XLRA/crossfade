@@ -1,5 +1,6 @@
-# Production on the Proxmox LXC: the app and MySQL on one host. Cloudflare Tunnel (or any
-# reverse proxy) points at 127.0.0.1:3000, and sleeep.dev rewrites /crossfade/* there.
+# Production on the Proxmox LXC: the app and MySQL on one host, plus an optional Cloudflare
+# Tunnel connector. The tunnel (or any reverse proxy) gives the app a public HTTPS origin, and
+# sleeep.dev rewrites /crossfade/* there.
 #
 #   cp .env.example deploy/.env.production                          # app settings, then fill it in
 #   echo "MYSQL_PASSWORD=$(openssl rand -hex 24)" > deploy/.env      # read by compose for ${...} below
@@ -41,6 +42,19 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+
+  # Cloudflare Tunnel connector, off unless deploy/.env sets COMPOSE_PROFILES=tunnel and
+  # CLOUDFLARE_TUNNEL_TOKEN. The tunnel's public hostname points at http://app:3000.
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles: [tunnel]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      app:
+        condition: service_healthy
 
 volumes:
   mysql:

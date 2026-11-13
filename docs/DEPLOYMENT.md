@@ -14,8 +14,9 @@ Browser  ───────────────────────�
                                                      │  Cloudflare Tunnel
                                                      ▼
                                     Docker host (Proxmox LXC or any Linux VM)
-                                    ├─ app   Crossfade, Next.js standalone, 127.0.0.1:3000
-                                    └─ db    MySQL 8.4, private to the Compose network
+                                    ├─ tunnel  cloudflared, connects out to Cloudflare
+                                    ├─ app     Crossfade, Next.js standalone, 127.0.0.1:3000
+                                    └─ db      MySQL 8.4, private to the Compose network
 ```
 
 This is the Next.js multi-zones pattern. Crossfade is built with the base path `/crossfade`, so every page, static
@@ -126,12 +127,21 @@ app on the host's `127.0.0.1` only, and doesn't publish MySQL at all.
 ## 5. Give it an HTTPS origin
 
 Vercel needs a public HTTPS address to forward to. A Cloudflare Tunnel provides one without opening ports on the
-host. The quickest way is a tunnel managed from the dashboard:
+host, and the Compose file includes its connector, switched off by default:
 
-1. In Cloudflare Zero Trust, go to **Networks → Tunnels → Create a tunnel** (type Cloudflared) and follow the
-   install command it shows for the Docker host. That runs `cloudflared` as a service that starts on boot.
+1. In Cloudflare Zero Trust, go to **Networks → Tunnels → Create a tunnel** (type Cloudflared) and copy the token
+   from the install command it shows.
 2. Add a public hostname (a "published application route") for `crossfade-origin.sleeep.dev`, or any hostname on
-   your zone, with the service `http://127.0.0.1:3000`.
+   your zone, with the service `http://app:3000`.
+3. Add two lines to `deploy/.env`, then run `docker compose -f deploy/docker-compose.prod.yml up -d` again:
+
+   ```bash
+   COMPOSE_PROFILES=tunnel
+   CLOUDFLARE_TUNNEL_TOKEN=<the token>
+   ```
+
+Running `cloudflared` as a service on the host works too: use the dashboard's install command, and the service
+`http://127.0.0.1:3000` instead.
 
 Then, from anywhere:
 
