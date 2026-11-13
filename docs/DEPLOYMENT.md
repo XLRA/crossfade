@@ -159,7 +159,7 @@ CROSSFADE_ORIGIN=https://crossfade-origin.sleeep.dev
 ```
 
 Redeploy heart. Its `next.config.ts` rewrites `/crossfade` and `/crossfade/:path*` to that origin whenever the
-variable is set. Then check the whole chain:
+variable is set, as `beforeFiles` rewrites (see below for why). Then check the whole chain:
 
 ```bash
 curl https://sleeep.dev/crossfade/api/health
@@ -177,6 +177,10 @@ each platform.
 - **Server actions.** Next.js checks that a server action's `Origin` matches the host it arrives on. Behind the
   rewrite it arrives on the tunnel's hostname, so `next.config.js` allows `sleeep.dev` by name. Serving Crossfade
   under another domain means adding it there.
+- **Client-side navigation.** Clicking around inside Crossfade fetches each page's data with an `RSC` header. For
+  ordinary (`afterFiles`) rewrites, Vercel adds `.rsc` to the path it forwards, which Crossfade's server doesn't
+  serve, so every click would turn into a full page load and stop playback. heart's rewrites are `beforeFiles`
+  rewrites, which Vercel forwards as they are.
 - **The bare origin.** A request for `/` on the origin redirects to `/crossfade`, and browsing works there, but
   signing in only works at sleeep.dev: OAuth always returns to sleeep.dev, and the cookies that sign-in sets are
   per host.
@@ -218,7 +222,8 @@ Crossfade shares nothing with the rest of sleeep.dev or the host, so removing it
 first if you want to keep any accounts or playlists.
 
 1. **sleeep.dev.** In heart's Vercel project, delete `CROSSFADE_ORIGIN` and redeploy. The rewrite drops out and
-   `/crossfade` is a 404 again. To remove the code as well, revert heart's "Serve Crossfade at /crossfade" commit.
+   `/crossfade` is a 404 again. To remove the code as well, delete the `crossfadeOrigin` constant and the Crossfade
+   `beforeFiles` rewrites from heart's `next.config.ts`.
 2. **The tunnel.** In Cloudflare, under **Networking → Tunnels**, delete the tunnel's route and then the tunnel.
    Check the zone's DNS records afterwards and delete the `crossfade-origin` CNAME if it's still listed.
 3. **The server.** From the checkout:
